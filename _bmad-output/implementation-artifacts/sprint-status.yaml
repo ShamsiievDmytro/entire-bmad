@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25
-last_updated: 2026-03-25  # stories 1.2 and 1.4 done
+last_updated: 2026-03-25  # stories 1.2, 1.4, 2.1 done
 project: metrics
 project_key: NOKEY
 tracking_system: file-system
@@ -52,7 +52,7 @@ development_status:
 
   # Epic 2: Live Bitcoin Price Display
   epic-2: in-progress
-  2-1-nano-stores-and-number-formatting-utilities: ready-for-dev
+  2-1-nano-stores-and-number-formatting-utilities: done
   2-2-websocket-connection-manager-binance: ready-for-dev
   2-3-live-price-card-with-direction-indicator: ready-for-dev
   2-4-tab-title-price-updates: ready-for-dev
