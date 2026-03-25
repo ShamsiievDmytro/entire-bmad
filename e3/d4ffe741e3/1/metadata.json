@@ -1,0 +1,87 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "e3d4ffe741e3",
+  "session_id": "9d2c3210-6d04-44b7-bb17-72513174f351",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-25T21:08:09.155917Z",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/1-2-design-token-system-and-typography.md",
+    "_bmad-output/implementation-artifacts/1-3-page-shell-with-responsive-layout.md",
+    "_bmad-output/implementation-artifacts/1-4-empty-dashboard-cards.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "src/components/PriceCard.astro",
+    "src/layouts/Layout.astro",
+    "src/pages/index.astro",
+    "src/styles/global.css"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "9c6f4de9db17",
+  "token_usage": {
+    "input_tokens": 57,
+    "cache_creation_tokens": 43947,
+    "cache_read_tokens": 1586131,
+    "output_tokens": 11913,
+    "api_call_count": 43
+  },
+  "session_metrics": {
+    "turn_count": 7
+  },
+  "summary": {
+    "intent": "Run parallel code reviews on two sprint stories (1-2 Design Token System and 1-4 Empty Dashboard Cards) using the bmad-code-review workflow, then resolve all findings.",
+    "outcome": "Both stories were reviewed, a token format decision was made, and all 4 patches were applied across the codebase. Both stories advanced to `done` status.",
+    "learnings": {
+      "repo": [
+        "Sprint story status is tracked in `_bmad-output/implementation-artifacts/sprint-status.yaml` and individual story markdown files under the same directory.",
+        "The bmad-code-review skill runs three review layers: Blind Hunter, Edge Case Hunter, and Acceptance Auditor.",
+        "The `--color-accent-glow` token was changed from `rgba(0, 245, 255, 0.15)` to `#00f5ff` so Tailwind v4 opacity modifiers work; call sites should use `bg-accent-glow/15`."
+      ],
+      "code": [
+        {
+          "path": "src/styles/global.css",
+          "line": 12,
+          "end_line": 12,
+          "finding": "Defining a color token with baked-in alpha (rgba) inside @theme prevents Tailwind v4 from generating opacity modifier variants. Use a base color instead and apply opacity at call sites."
+        },
+        {
+          "path": "src/styles/global.css",
+          "line": 55,
+          "end_line": 56,
+          "finding": "`@apply leading-none` in `.price-text` was a no-op because an explicit `line-height: 1.1` immediately followed it. Removed. Also missing responsive font-size: spec requires 36px mobile / 48px desktop."
+        },
+        {
+          "path": "src/pages/index.astro",
+          "finding": "`\u003ch1 class=\"sr-only\"\u003e` placed inside `\u003cmain class=\"grid\"\u003e` became a grid child, occupying the first 1.5fr column and pushing PriceCard/MarketCapCard out of their intended layout. Moved outside the grid."
+        },
+        {
+          "path": "src/components/PriceCard.astro",
+          "finding": "Redundant `sm:min-h-[53px]` class on `\u003coutput\u003e` element was removed."
+        }
+      ],
+      "workflow": [
+        "Parallel agent execution for independent code reviews is effective — both agents completed in ~95-110 seconds each with no conflicts.",
+        "The bmad-code-review workflow classifies findings into: patch (apply now), decision-needed (requires human input), deferred (out of scope), and dismissed.",
+        "Decisions should be resolved before patches are applied to ensure consistent intent across related changes."
+      ]
+    },
+    "friction": [
+      "After the review agents completed, applying patches required manually re-reading files and re-grepping for symbols, duplicating work the agents had already done.",
+      "Updating story statuses and sprint-status.yaml required multiple sequential edits and reads due to needing to verify current file state before each edit."
+    ],
+    "open_items": [
+      "Story 1-4: Hardcoded 'Live' status text in static shell — deferred to Story 4.3 when live data wiring is implemented.",
+      "Story 1-4: `sm:py-12` over-padding on body — pre-existing artifact from Story 1.3, not addressed.",
+      "Story 2-1 (Nano Stores and Number Formatting Utilities) is the next ready-for-dev story and was not started."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-25T21:07:48.101773Z",
+    "agent_lines": 0,
+    "human_added": 112,
+    "human_modified": 70,
+    "human_removed": 0,
+    "total_committed": 117,
+    "agent_percentage": 0
+  }
+}
