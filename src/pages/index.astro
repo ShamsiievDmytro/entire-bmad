@@ -1,9 +1,13 @@
 ---
-// src/pages/index.astro
 import Layout from '../layouts/Layout.astro';
+import PriceCard from '../components/PriceCard.astro';
+import MarketCapCard from '../components/MarketCapCard.astro';
+import ChartCard from '../components/ChartCard.astro';
+import StatusIndicator from '../components/StatusIndicator.astro';
 ---
 <Layout>
-  <main>
-    <h1>Metrics</h1>
-  </main>
+  <PriceCard />
+  <MarketCapCard />
+  <ChartCard />
+  <StatusIndicator />
 </Layout>

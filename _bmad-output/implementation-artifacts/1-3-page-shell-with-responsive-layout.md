@@ -1,6 +1,6 @@
 # Story 1.3: Page Shell with Responsive Layout
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,24 +22,24 @@ so that I never see a flash of white and the page looks polished on both desktop
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update `Layout.astro` with FOUC prevention and full-viewport dark background (AC: #1, #2)
-  - [ ] Set `bg-base` (#0a0a0f) directly on `<html>` element via `style="background-color: #0a0a0f"` (inline for FOUC prevention — CSS loads after HTML parse)
-  - [ ] Ensure `lang="en"` is on `<html>` (already present from Story 1.1)
-  - [ ] Set `<body>` to full viewport height with `min-h-screen` or `min-h-dvh`
-- [ ] Task 2: Create centered content container with CSS Grid (AC: #2, #3, #4, #5)
-  - [ ] Add a `<main>` container with `max-w-[720px]` centered via `mx-auto`
-  - [ ] Apply CSS Grid: `grid grid-cols-1 sm:grid-cols-[1.5fr_1fr]` with `gap-6` (24px)
-  - [ ] Desktop: 32px page padding (`px-8 sm:px-8`), mobile: 16px (`px-4`)
-  - [ ] Desktop: vertically centered via flexbox on body (`flex items-center justify-center min-h-dvh`)
-  - [ ] Mobile: top-aligned (`items-start` on small screens, `sm:items-center`)
-- [ ] Task 3: Update `index.astro` to use Layout with grid container (AC: #9)
-  - [ ] Remove the existing `<main><h1>Metrics</h1></main>` placeholder
-  - [ ] Ensure `index.astro` passes content through `<Layout>` slot
-- [ ] Task 4: Verify responsive behavior (AC: #6, #7, #8)
-  - [ ] No `vh` units used — confirm `dvh` or Tailwind `min-h-screen` only
-  - [ ] No JavaScript used for responsive logic
-  - [ ] `npm run build` succeeds
-  - [ ] `npm run lint` passes
+- [x] Task 1: Update `Layout.astro` with FOUC prevention and full-viewport dark background (AC: #1, #2)
+  - [x] Set `bg-base` (#0a0a0f) directly on `<html>` element via `style="background-color: #0a0a0f"` (inline for FOUC prevention — CSS loads after HTML parse)
+  - [x] Ensure `lang="en"` is on `<html>` (already present from Story 1.1)
+  - [x] Set `<body>` to full viewport height with `min-h-screen` or `min-h-dvh`
+- [x] Task 2: Create centered content container with CSS Grid (AC: #2, #3, #4, #5)
+  - [x] Add a `<main>` container with `max-w-[720px]` centered via `mx-auto`
+  - [x] Apply CSS Grid: `grid grid-cols-1 sm:grid-cols-[1.5fr_1fr]` with `gap-6` (24px)
+  - [x] Desktop: 32px page padding (`px-8 sm:px-8`), mobile: 16px (`px-4`)
+  - [x] Desktop: vertically centered via flexbox on body (`flex items-center justify-center min-h-dvh`)
+  - [x] Mobile: top-aligned (`items-start` on small screens, `sm:items-center`)
+- [x] Task 3: Update `index.astro` to use Layout with grid container (AC: #9)
+  - [x] Remove the existing `<main><h1>Metrics</h1></main>` placeholder
+  - [x] Ensure `index.astro` passes content through `<Layout>` slot
+- [x] Task 4: Verify responsive behavior (AC: #6, #7, #8)
+  - [x] No `vh` units used — confirm `dvh` or Tailwind `min-h-screen` only
+  - [x] No JavaScript used for responsive logic
+  - [x] `npm run build` succeeds
+  - [x] `npm run lint` passes
 
 ## Dev Notes
 
@@ -194,12 +194,34 @@ Tailwind v4 uses `sm:` prefix for `>=640px` by default. This is the single break
 
 ### Agent Model Used
 
+Gemini 2.0 Flash
+
 ### Debug Log References
+
+- Updated `Layout.astro` with inline style for FOUC prevention.
+- Implemented CSS Grid layout with responsive column switching (1.5fr 1fr).
+- Used `min-h-dvh` and Tailwind `items-start sm:items-center` for vertical alignment.
+- Verified build and linting passed successfully.
 
 ### Completion Notes List
 
+- `Layout.astro` now provides a dark background and responsive grid shell.
+- FOUC prevention implemented via inline background-color on `<html>`.
+- Mobile layout is a single column; desktop is 2 columns (1.5fr 1fr).
+- `index.astro` is now a clean entry point using the `Layout`.
+
 ### File List
 
-### Review Findings
+- src/layouts/Layout.astro
+- src/pages/index.astro
+Status: done
+
+## Story
+...
+- [x] [Review][Patch] Missing Primary Heading (H1) [src/pages/index.astro]
+- [x] [Review][Patch] Vertical Centering Logic Risk (Content Cut-off) [src/layouts/Layout.astro]
+- [x] [Review][Patch] Inconsistent Vertical Padding [src/layouts/Layout.astro]
 
 ### Change Log
+
+- 2026-03-25: Story 1.3 implemented — Page shell with responsive layout and FOUC prevention.

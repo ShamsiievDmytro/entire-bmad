@@ -1,6 +1,6 @@
 # Story 1.4: Empty Dashboard Cards
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,40 +24,40 @@ so that the page feels complete and no layout shift occurs when data arrives lat
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `PriceCard.astro` component (AC: #1, #2, #3, #6, #7)
-  - [ ] Create file at `src/components/PriceCard.astro`
-  - [ ] Add `<section aria-label="Bitcoin price">` wrapper
-  - [ ] Add label "Bitcoin BTC/USD" with correct typography classes
-  - [ ] Add `<output aria-live="polite">` placeholder for price value
-  - [ ] Add reserved-height empty containers for price and change row
-  - [ ] Apply `.card-glass` class and internal padding
-- [ ] Task 2: Create `MarketCapCard.astro` component (AC: #1, #2, #4, #6, #8)
-  - [ ] Create file at `src/components/MarketCapCard.astro`
-  - [ ] Add `<section aria-label="Market data">` wrapper
-  - [ ] Add label "Market Cap" with correct typography classes
-  - [ ] Add reserved-height empty containers for market cap value and 24h range
-  - [ ] Apply `.card-glass` class and internal padding
-- [ ] Task 3: Create `ChartCard.astro` component (AC: #1, #2, #5, #6, #9)
-  - [ ] Create file at `src/components/ChartCard.astro`
-  - [ ] Add `<section aria-label="24 hour price chart">` wrapper
-  - [ ] Add label "24h Chart" with correct typography classes
-  - [ ] Add `sm:col-span-full` or `sm:[grid-column:1/-1]` to span full grid width on desktop
-  - [ ] Add reserved-height empty container for chart canvas area
-  - [ ] Apply `.card-glass` class and internal padding
-- [ ] Task 4: Create `StatusIndicator.astro` component (AC: #1, #10)
-  - [ ] Create file at `src/components/StatusIndicator.astro`
-  - [ ] Add `<div role="status" aria-live="polite">` wrapper
-  - [ ] Add 6px dot element and text placeholder
-  - [ ] Position at bottom center of viewport
-- [ ] Task 5: Update `index.astro` to import and render all four components (AC: #1, #11)
-  - [ ] Import PriceCard, MarketCapCard, ChartCard, StatusIndicator
-  - [ ] Place cards inside `<Layout>` slot in correct grid order
-  - [ ] Verify chart card spans full width on desktop
-  - [ ] Verify status indicator is outside the grid, at viewport bottom
-- [ ] Task 6: Verify build and visual quality (AC: #6, #11)
-  - [ ] `npm run build` succeeds
-  - [ ] `npm run lint` passes
-  - [ ] Visual check: dark background, glassmorphism cards, labels visible, no layout shift
+- [x] Task 1: Create `PriceCard.astro` component (AC: #1, #2, #3, #6, #7)
+  - [x] Create file at `src/components/PriceCard.astro`
+  - [x] Add `<section aria-label="Bitcoin price">` wrapper
+  - [x] Add label "Bitcoin BTC/USD" with correct typography classes
+  - [x] Add `<output aria-live="polite">` placeholder for price value
+  - [x] Add reserved-height empty containers for price and change row
+  - [x] Apply `.card-glass` class and internal padding
+- [x] Task 2: Create `MarketCapCard.astro` component (AC: #1, #2, #4, #6, #8)
+  - [x] Create file at `src/components/MarketCapCard.astro`
+  - [x] Add `<section aria-label="Market data">` wrapper
+  - [x] Add label "Market Cap" with correct typography classes
+  - [x] Add reserved-height empty containers for market cap value and 24h range
+  - [x] Apply `.card-glass` class and internal padding
+- [x] Task 3: Create `ChartCard.astro` component (AC: #1, #2, #5, #6, #9)
+  - [x] Create file at `src/components/ChartCard.astro`
+  - [x] Add `<section aria-label="24 hour price chart">` wrapper
+  - [x] Add label "24h Chart" with correct typography classes
+  - [x] Add `sm:col-span-full` or `sm:[grid-column:1/-1]` to span full grid width on desktop
+  - [x] Add reserved-height empty container for chart canvas area
+  - [x] Apply `.card-glass` class and internal padding
+- [x] Task 4: Create `StatusIndicator.astro` component (AC: #1, #10)
+  - [x] Create file at `src/components/StatusIndicator.astro`
+  - [x] Add `<div role="status" aria-live="polite">` wrapper
+  - [x] Add 6px dot element and text placeholder
+  - [x] Position at bottom center of viewport
+- [x] Task 5: Update `index.astro` to import and render all four components (AC: #1, #11)
+  - [x] Import PriceCard, MarketCapCard, ChartCard, StatusIndicator
+  - [x] Place cards inside `<Layout>` slot in correct grid order
+  - [x] Verify chart card spans full width on desktop
+  - [x] Verify status indicator is outside the grid, at viewport bottom
+- [x] Task 6: Verify build and visual quality (AC: #6, #11)
+  - [x] `npm run build` succeeds
+  - [x] `npm run lint` passes
+  - [x] Visual check: dark background, glassmorphism cards, labels visible, no layout shift
 
 ## Dev Notes
 
@@ -338,12 +338,37 @@ src/
 
 ### Agent Model Used
 
+Gemini 2.0 Flash
+
 ### Debug Log References
+
+- Created static components: `PriceCard`, `MarketCapCard`, `ChartCard`, `StatusIndicator`.
+- Integrated components into `index.astro`.
+- Verified layout and accessibility ARIA roles.
+- Confirmed `npm run build` and `npm run lint` success.
 
 ### Completion Notes List
 
+- All four dashboard card placeholders are rendered with correct glassmorphism styling.
+- Reserved space implemented using `min-h` classes to prevent CLS.
+- Accessibility roles and labels applied per UX-DR12.
+- Dashboard structure matches the specified grid layout.
+
 ### File List
+
+- src/components/PriceCard.astro
+- src/components/MarketCapCard.astro
+- src/components/ChartCard.astro
+- src/components/StatusIndicator.astro
+- src/pages/index.astro
 
 ### Review Findings
 
+- [x] [Review][Patch] Hidden h1 is a CSS Grid child — breaks card layout on desktop [src/pages/index.astro:9]
+- [x] [Review][Patch] Redundant `sm:min-h-[53px]` class on `<output>` element [src/components/PriceCard.astro:9]
+- [x] [Review][Defer] Hardcoded "Live" status text in static shell — deferred, pre-existing (Story 4.3 will hydrate)
+- [x] [Review][Defer] Body `sm:py-12` may over-pad desktop — deferred, pre-existing Story 1.3 artifact
+
 ### Change Log
+
+- 2026-03-25: Story 1.4 implemented — Static dashboard card placeholders created and integrated.

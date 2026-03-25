@@ -1,6 +1,6 @@
 # Story 1.2: Design Token System & Typography
 
-Status: review
+Status: done
 
 ## Story
 
@@ -284,6 +284,10 @@ No issues encountered. All tasks completed cleanly on first pass.
 - `src/lib/theme-constants.test.ts` — CREATED — Unit tests for theme-constants exports
 
 ### Review Findings
+
+- [x] [Review][Patch] Redundant `leading-none` in `.price-text` is overridden by explicit `line-height: 1.1` [src/styles/global.css:55]
+- [x] [Review][Patch] Missing responsive mobile font-size for `.price-text` — spec type scale requires 36px on mobile but composition only sets 48px [src/styles/global.css:56]
+- [x] [Review][Decision] `rgba()` value for `--color-accent-glow` in `@theme` may not work with Tailwind v4 opacity modifier syntax (`bg-accent-glow/50`) — resolved: replaced with `#00f5ff`; use `bg-accent-glow/15` at call sites
 
 ### Change Log
 

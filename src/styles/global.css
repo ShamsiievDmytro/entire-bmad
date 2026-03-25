@@ -9,7 +9,7 @@
   /* Accent colors */
   --color-accent-primary: #00f5ff;
   --color-accent-secondary: #8b5cf6;
-  --color-accent-glow: rgba(0, 245, 255, 0.15);
+  --color-accent-glow: #00f5ff; /* use bg-accent-glow/15 at call sites */
 
   /* Price direction colors */
   --color-price-up: #22c55e;
@@ -52,9 +52,13 @@
 }
 
 .price-text {
-  @apply font-price text-text-primary font-semibold leading-none;
-  font-size: 48px;
+  @apply font-price text-text-primary font-semibold;
+  font-size: 36px;
   line-height: 1.1;
+
+  @media (min-width: 640px) {
+    font-size: 48px;
+  }
 }
 
 .status-badge {

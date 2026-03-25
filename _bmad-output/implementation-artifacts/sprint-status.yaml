@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25
-last_updated: 2026-03-25  # story 1.2 in-progress
+last_updated: 2026-03-25  # stories 1.2 and 1.4 done
 project: metrics
 project_key: NOKEY
 tracking_system: file-system
@@ -45,9 +45,9 @@ development_status:
   # Epic 1: Project Foundation & Dashboard Shell
   epic-1: in-progress
   1-1-project-initialization-and-tooling-setup: done
-  1-2-design-token-system-and-typography: review
-  1-3-page-shell-with-responsive-layout: ready-for-dev
-  1-4-empty-dashboard-cards: ready-for-dev
+  1-2-design-token-system-and-typography: done
+  1-3-page-shell-with-responsive-layout: done
+  1-4-empty-dashboard-cards: done
   epic-1-retrospective: optional
 
   # Epic 2: Live Bitcoin Price Display
