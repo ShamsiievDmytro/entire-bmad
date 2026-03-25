@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "8f23bba9da7f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/1-2-design-token-system-and-typography.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "src/layouts/Layout.astro",
+    "src/lib/theme-constants.test.ts",
+    "src/lib/theme-constants.ts",
+    "src/styles/global.css"
+  ],
+  "sessions": [
+    {
+      "metadata": "/8f/23bba9da7f/0/metadata.json",
+      "transcript": "/8f/23bba9da7f/0/full.jsonl",
+      "content_hash": "/8f/23bba9da7f/0/content_hash.txt",
+      "prompt": "/8f/23bba9da7f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 34967,
+    "cache_read_tokens": 576001,
+    "output_tokens": 6794,
+    "api_call_count": 17
+  }
+}
