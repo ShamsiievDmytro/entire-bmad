@@ -1,0 +1,5 @@
+/bmad-check-implementation-readiness
+
+---
+
+c

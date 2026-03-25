@@ -3,7 +3,7 @@
   "checkpoint_id": "514f85fbb27a",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 8,
+  "checkpoints_count": 9,
   "files_touched": [
     "_bmad-output/implementation-artifacts/sprint-status.yaml",
     "_bmad-output/planning-artifacts/epics.md",
@@ -27,13 +27,19 @@
       "transcript": "/51/4f85fbb27a/2/full.jsonl",
       "content_hash": "/51/4f85fbb27a/2/content_hash.txt",
       "prompt": "/51/4f85fbb27a/2/prompt.txt"
+    },
+    {
+      "metadata": "/51/4f85fbb27a/3/metadata.json",
+      "transcript": "/51/4f85fbb27a/3/full.jsonl",
+      "content_hash": "/51/4f85fbb27a/3/content_hash.txt",
+      "prompt": "/51/4f85fbb27a/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 95,
-    "cache_creation_tokens": 218852,
-    "cache_read_tokens": 3864462,
-    "output_tokens": 30301,
-    "api_call_count": 62
+    "input_tokens": 141,
+    "cache_creation_tokens": 313728,
+    "cache_read_tokens": 6032025,
+    "output_tokens": 45205,
+    "api_call_count": 103
   }
 }
