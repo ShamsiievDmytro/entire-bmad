@@ -3,9 +3,12 @@
   "checkpoint_id": "7301392a9dff",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 7,
+  "checkpoints_count": 33,
   "files_touched": [
-    "_bmad-output/planning-artifacts/architecture.md"
+    "_bmad-output/planning-artifacts/architecture.md",
+    "_bmad-output/planning-artifacts/prd.md",
+    "_bmad-output/planning-artifacts/ux-design-directions.html",
+    "_bmad-output/planning-artifacts/ux-design-specification.md"
   ],
   "sessions": [
     {
@@ -13,13 +16,19 @@
       "transcript": "/73/01392a9dff/0/full.jsonl",
       "content_hash": "/73/01392a9dff/0/content_hash.txt",
       "prompt": "/73/01392a9dff/0/prompt.txt"
+    },
+    {
+      "metadata": "/73/01392a9dff/1/metadata.json",
+      "transcript": "/73/01392a9dff/1/full.jsonl",
+      "content_hash": "/73/01392a9dff/1/content_hash.txt",
+      "prompt": "/73/01392a9dff/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1740,
-    "cache_creation_tokens": 129068,
-    "cache_read_tokens": 5126901,
-    "output_tokens": 34263,
-    "api_call_count": 65
+    "input_tokens": 1985,
+    "cache_creation_tokens": 347188,
+    "cache_read_tokens": 21227627,
+    "output_tokens": 104250,
+    "api_call_count": 210
   }
 }
