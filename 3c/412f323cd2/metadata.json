@@ -3,11 +3,15 @@
   "checkpoint_id": "3c412f323cd2",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
+  "checkpoints_count": 6,
   "files_touched": [
     "_bmad-output/implementation-artifacts/2-1-nano-stores-and-number-formatting-utilities.md",
     "_bmad-output/implementation-artifacts/deferred-work.md",
     "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "src/lib/stores/chart-store.ts",
+    "src/lib/stores/market-store.ts",
+    "src/lib/stores/price-store.ts",
+    "src/lib/stores/status-store.ts",
     "src/lib/utils/format-utils.test.ts",
     "src/lib/utils/format-utils.ts"
   ],
@@ -17,13 +21,19 @@
       "transcript": "/3c/412f323cd2/0/full.jsonl",
       "content_hash": "/3c/412f323cd2/0/content_hash.txt",
       "prompt": "/3c/412f323cd2/0/prompt.txt"
+    },
+    {
+      "metadata": "/3c/412f323cd2/1/metadata.json",
+      "transcript": "/3c/412f323cd2/1/full.jsonl",
+      "content_hash": "/3c/412f323cd2/1/content_hash.txt",
+      "prompt": "/3c/412f323cd2/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 600,
-    "cache_creation_tokens": 61717,
-    "cache_read_tokens": 1894437,
-    "output_tokens": 23996,
-    "api_call_count": 38
+    "input_tokens": 624,
+    "cache_creation_tokens": 102808,
+    "cache_read_tokens": 2729970,
+    "output_tokens": 32669,
+    "api_call_count": 61
   }
 }
