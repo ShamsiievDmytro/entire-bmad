@@ -1,1 +1,5 @@
 Run 4 agents in parallel to create  /bmad-create-story according to the @_bmad-output/implementation-artifacts/sprint-status.yaml
+
+---
+
+lets run 4 agents to perform  /bmad-create-story workflow to remining stories
