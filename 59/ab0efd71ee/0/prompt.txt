@@ -1,0 +1,23 @@
+Lets create dev team, 3 senior developers, 3 code reviews, devils advocate.
+
+Consider that deelopers but use /bmad-dev-story skill for it's work and work only according to the bmad flow, consider that after bmad
+developer finished delegate /bmad-code-review for to code review agents. In case any decision during code review or implementation
+
+required let me know
+
+---
+
+Guard it option
+what is the best practice to resolve such things using bmad? should we create tast/subtask and delegate it to bmad dev ?
+
+---
+
+yes
+
+---
+
+TeamDelete
+
+---
+
+commite changes

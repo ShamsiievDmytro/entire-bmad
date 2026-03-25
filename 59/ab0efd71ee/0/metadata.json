@@ -1,0 +1,121 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "59ab0efd71ee",
+  "session_id": "76810eb8-896c-4b26-ad8f-8c27f4af8e0b",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-25T22:19:16.755462Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/settings.json"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-6",
+  "turn_id": "fcc127cb5b55",
+  "token_usage": {
+    "input_tokens": 171,
+    "cache_creation_tokens": 121212,
+    "cache_read_tokens": 6449696,
+    "output_tokens": 19944,
+    "api_call_count": 96
+  },
+  "session_metrics": {
+    "turn_count": 32
+  },
+  "summary": {
+    "intent": "Implement Epics 2-4 of a BTC metrics dashboard using a simulated dev team of 3 senior developers, 3 code reviewers, and a devil's advocate, all following the bmad workflow.",
+    "outcome": "All 9 stories (2.2-2.4, 3.1-3.3, 4.1-4.3) plus a post-sprint Story 4.4 were implemented, reviewed, and committed. 105 tests pass, all architecture rules verified compliant.",
+    "learnings": {
+      "repo": [
+        "Project uses bmad workflow: /bmad-dev-story for implementation, /bmad-code-review for review, story files are the single source of truth",
+        "Architecture enforces: no barrel files (no index.ts), unidirectional data flow (only services write to stores), CLS=0 via reserved height containers, recursive setTimeout over setInterval, format-utils for all formatting",
+        "ConnectionManager is a singleton in src/lib/services/connection-manager.ts managing Binance WS → CoinCap WS → REST fallback chain with exponential backoff (1s→2s→4s→8s→16s→30s cap)",
+        "MarketDataService polls CoinGecko REST at 60s intervals using recursive setTimeout; chartStore capped at 24 entries via sampleHourlyPoints",
+        "Layout.astro is the single init point for ConnectionManager, MarketDataService, and tab-title-updater",
+        "Astro island scripts use document.querySelector by class name globally — works for single-instance components but is architecturally brittle",
+        "lightweight-charts v5 API uses chart.addSeries(AreaSeries, opts) and autoSize:true (no manual ResizeObserver needed)"
+      ],
+      "code": [
+        {
+          "path": "src/lib/services/connection-manager.ts",
+          "line": 85,
+          "end_line": 85,
+          "finding": "isConnecting boolean guard prevents re-entry into connectBinance() during promotion race condition"
+        },
+        {
+          "path": "src/lib/services/connection-manager.ts",
+          "line": 105,
+          "end_line": 105,
+          "finding": "previousPrice reset to null on connect() — first tick after reconnect shows neutral direction (known trade-off)"
+        },
+        {
+          "path": "src/lib/services/connection-manager.ts",
+          "line": 285,
+          "end_line": 311,
+          "finding": "attemptPromotion() creates a probe WebSocket to test Binance availability; deferred finding: probe WS not tracked in this.ws (low-probability race if disconnect called during 5s probe)"
+        },
+        {
+          "path": "src/lib/services/market-data-service.ts",
+          "line": 29,
+          "end_line": 56,
+          "finding": "AbortController added post-review: created in start(), aborted in stop(), signal passed to both fetch calls; fetchAndSchedule() guards scheduleNext() behind controller null-check"
+        },
+        {
+          "path": "src/components/StatusIndicator.astro",
+          "line": 11,
+          "end_line": 14,
+          "finding": "Static HTML must show 'Connecting...' with amber dot to match statusStore initial value of 'connecting' — avoids state flash on hydration"
+        },
+        {
+          "path": "src/components/PriceCard.astro",
+          "line": 9,
+          "end_line": 9,
+          "finding": "Fixed height h-[42px] sm:h-[56px] derived from font metrics (36px*1.1=39.6→42px mobile, 48px*1.1=52.8→56px desktop) — min-h was too fragile (0.2px CLS margin)"
+        },
+        {
+          "path": "src/components/PriceCard.astro",
+          "line": 32,
+          "end_line": 37,
+          "finding": "Stale badge uses visibility/opacity pattern (not display:none) for CLS=0; aria-hidden toggled alongside .visible class for screen reader correctness"
+        },
+        {
+          "path": "src/components/ChartCard.astro",
+          "line": 89,
+          "end_line": 89,
+          "finding": "toChartData(points: ChartPoint[]) requires explicit type annotation; ChartPoint imported directly from ../lib/types (no barrel)"
+        }
+      ],
+      "workflow": [
+        "bmad flow for post-sprint defects: /bmad-create-story first to produce a self-contained story file, then /bmad-dev-story + /bmad-code-review — the story file is the handoff artifact, not chat context",
+        "Story ordering matters: 4.1/4.2 depend on connection-manager.ts from 2.2; when blocked, pivot to independent stories first (4.3 was done before 4.1)",
+        "Devil's advocate runs twice: once mid-sprint to catch early issues, once after all reviews complete for final architecture compliance check",
+        "Team lead handles all cross-story decisions: which component owns a shared element (stale badge ownership between 2.3 and 4.3 went to 4.3 as statusStore is 4.x territory)",
+        "Shutdown agents explicitly when their work is done to keep the active team lean",
+        "Task dependencies should be set before spawning agents to ensure correct sequencing"
+      ]
+    },
+    "friction": [
+      "Story 4.1 was blocked by missing connection-manager.ts from Story 2.2 — dev-carol had to be redirected to 4.3 first",
+      "Story 4.3 Step 2 referenced PriceCard.astro state from Story 2.3 which didn't exist yet — required a cross-story ownership decision on the stale badge",
+      "Devils-advocate sent duplicate idle notifications after shutdown, causing minor noise",
+      "Some agents received stale/redundant messages (dev-carol received an already-completed task message) due to message queuing timing",
+      "Promotion race condition in attemptPromotion() required a post-sprint Story 4.4 fix that wasn't caught until devil's advocate second pass"
+    ],
+    "open_items": [
+      "Promotion canary WebSocket not tracked in this.ws — low-probability race if disconnect() called during the 5s Binance probe window (deferred as acceptable by reviewer-3)",
+      "Astro island scripts use unscoped document.querySelector by class name — would break if multiple component instances were rendered (acceptable for current single-page architecture)",
+      "No unsubscribe cleanup in tab-title-updater or island script block subscriptions — nanostores subscriptions hold references; acceptable for never-unmounting page but noted for NFR17 (24h+ sessions)",
+      "3.2 spec ambiguity: '24h Range' label placement inside opacity container means label is hidden when marketStore is null — developer followed spec HTML correctly but spec has an internal inconsistency",
+      "Chart store uses full array replacement on each 60s poll rather than incremental append/shift — acceptable for v1 but architecture spec describes append-only pattern for future modification"
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-25T22:18:37.431015Z",
+    "agent_lines": 3,
+    "human_added": 2,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 5,
+    "agent_percentage": 60
+  }
+}
