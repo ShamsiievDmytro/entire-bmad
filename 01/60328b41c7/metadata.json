@@ -1,0 +1,48 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "0160328b41c7",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    ".prettierrc",
+    ".vscode/extensions.json",
+    ".vscode/launch.json",
+    "README.md",
+    "_bmad-output/implementation-artifacts/1-1-project-initialization-and-tooling-setup.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "astro.config.mjs",
+    "eslint.config.js",
+    "package-lock.json",
+    "package.json",
+    "public/favicon.ico",
+    "public/favicon.svg",
+    "src/components/.gitkeep",
+    "src/layouts/Layout.astro",
+    "src/lib/services/.gitkeep",
+    "src/lib/stores/.gitkeep",
+    "src/lib/types.test.ts",
+    "src/lib/types.ts",
+    "src/lib/utils/.gitkeep",
+    "src/pages/index.astro",
+    "src/styles/global.css",
+    "tsconfig.json",
+    "vitest.config.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/01/60328b41c7/0/metadata.json",
+      "transcript": "/01/60328b41c7/0/full.jsonl",
+      "content_hash": "/01/60328b41c7/0/content_hash.txt",
+      "prompt": "/01/60328b41c7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 41,
+    "cache_creation_tokens": 42092,
+    "cache_read_tokens": 1496121,
+    "output_tokens": 9018,
+    "api_call_count": 40
+  }
+}
