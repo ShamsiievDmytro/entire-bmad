@@ -3,7 +3,7 @@
   "checkpoint_id": "0160328b41c7",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 3,
+  "checkpoints_count": 10,
   "files_touched": [
     ".gitignore",
     ".prettierrc",
@@ -11,6 +11,7 @@
     ".vscode/launch.json",
     "README.md",
     "_bmad-output/implementation-artifacts/1-1-project-initialization-and-tooling-setup.md",
+    "_bmad-output/implementation-artifacts/deferred-work.md",
     "_bmad-output/implementation-artifacts/sprint-status.yaml",
     "astro.config.mjs",
     "eslint.config.js",
@@ -48,13 +49,19 @@
       "transcript": "/01/60328b41c7/2/full.jsonl",
       "content_hash": "/01/60328b41c7/2/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/01/60328b41c7/3/metadata.json",
+      "transcript": "/01/60328b41c7/3/full.jsonl",
+      "content_hash": "/01/60328b41c7/3/content_hash.txt",
+      "prompt": "/01/60328b41c7/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 53,
-    "cache_creation_tokens": 93622,
-    "cache_read_tokens": 1900214,
-    "output_tokens": 13696,
-    "api_call_count": 49
+    "input_tokens": 98,
+    "cache_creation_tokens": 146365,
+    "cache_read_tokens": 3128634,
+    "output_tokens": 29012,
+    "api_call_count": 79
   }
 }
