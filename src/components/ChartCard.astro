@@ -1,12 +1,151 @@
 ---
 // src/components/ChartCard.astro
-// Static empty card — hydrated in Story 3.3
+// Hydrated island — subscribes to chartStore, renders lightweight-charts area series
 ---
 <section aria-label="24 hour price chart" class="card-glass p-4 sm:p-6 sm:[grid-column:1/-1]">
   <span class="font-label text-text-secondary text-[12px] font-normal leading-[1.4]">
     24h Chart
   </span>
-  <div class="mt-2 min-h-[200px]">
-    <!-- Chart canvas (lightweight-charts) populated by Story 3.3 -->
+  <div class="chart-wrapper" data-loading>
+    <div class="mt-2 min-h-[200px] relative">
+      <div id="chart-container" class="w-full h-full absolute inset-0" aria-hidden="true"></div>
+      <div
+        class="chart-tooltip hidden absolute z-10 pointer-events-none font-price text-text-primary text-[13px] font-normal leading-[1.1] whitespace-nowrap px-2 py-1 rounded bg-bg-card"
+      >
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  .chart-wrapper[data-loading] {
+    opacity: 0;
+  }
+
+  .chart-wrapper {
+    opacity: 1;
+    transition: opacity 500ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chart-wrapper,
+    .chart-wrapper[data-loading] {
+      transition-duration: 0ms !important;
+    }
+
+    .chart-wrapper[data-loading] {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import { createChart, AreaSeries } from 'lightweight-charts';
+  import { chartStore } from '../lib/stores/chart-store';
+  import { formatChartTooltip } from '../lib/utils/format-utils';
+  import { CHART_COLORS } from '../lib/theme-constants';
+  import type { ChartPoint } from '../lib/types';
+
+  const chartContainer = document.getElementById('chart-container');
+  const chartWrapper = document.querySelector('.chart-wrapper');
+  const tooltipEl = document.querySelector('.chart-tooltip');
+
+  if (chartContainer && chartWrapper && tooltipEl) {
+    const chart = createChart(chartContainer, {
+      layout: {
+        background: { color: 'transparent' },
+        textColor: CHART_COLORS.textColor,
+      },
+      grid: {
+        vertLines: { color: CHART_COLORS.gridLinesColor },
+        horzLines: { color: CHART_COLORS.gridLinesColor },
+      },
+      crosshair: {
+        vertLine: { color: CHART_COLORS.crosshairColor, width: 1, style: 0, labelVisible: false },
+        horzLine: { color: CHART_COLORS.crosshairColor, width: 1, style: 0, labelVisible: false },
+      },
+      rightPriceScale: {
+        borderVisible: false,
+      },
+      timeScale: {
+        borderVisible: false,
+        timeVisible: true,
+        secondsVisible: false,
+      },
+      handleScroll: false,
+      handleScale: false,
+      autoSize: true,
+    });
+
+    const areaSeries = chart.addSeries(AreaSeries, {
+      lineColor: CHART_COLORS.lineColor,
+      topColor: CHART_COLORS.areaTopColor,
+      bottomColor: CHART_COLORS.areaBottomColor,
+      lineWidth: 2,
+    });
+
+    let hasReceivedData = false;
+    let previousDataLength = 0;
+
+    function toChartData(points: ChartPoint[]) {
+      return points.map((p) => ({
+        time: Math.floor(p.time / 1000),
+        value: p.value,
+      }));
+    }
+
+    chartStore.subscribe((points) => {
+      if (points.length === 0) return;
+
+      if (!hasReceivedData) {
+        hasReceivedData = true;
+        areaSeries.setData(toChartData(points));
+        chart.timeScale().fitContent();
+        chartWrapper.removeAttribute('data-loading');
+      } else if (points.length > previousDataLength) {
+        const lastPoint = points[points.length - 1];
+        areaSeries.update({
+          time: Math.floor(lastPoint.time / 1000),
+          value: lastPoint.value,
+        });
+        chart.timeScale().fitContent();
+      } else {
+        areaSeries.setData(toChartData(points));
+        chart.timeScale().fitContent();
+      }
+
+      previousDataLength = points.length;
+    });
+
+    chart.subscribeCrosshairMove((param) => {
+      if (
+        !param.time ||
+        !param.point ||
+        param.point.x < 0 ||
+        param.point.y < 0
+      ) {
+        tooltipEl.classList.add('hidden');
+        return;
+      }
+
+      const seriesData = param.seriesData.get(areaSeries);
+      if (!seriesData || !('value' in seriesData)) {
+        tooltipEl.classList.add('hidden');
+        return;
+      }
+
+      const price = seriesData.value;
+      const time = param.time * 1000;
+
+      tooltipEl.textContent = formatChartTooltip(price, time);
+      tooltipEl.classList.remove('hidden');
+
+      const chartRect = chartContainer.getBoundingClientRect();
+      const tooltipWidth = tooltipEl.offsetWidth;
+      let left = param.point.x - tooltipWidth / 2;
+      left = Math.max(0, Math.min(left, chartRect.width - tooltipWidth));
+      tooltipEl.style.left = left + 'px';
+      tooltipEl.style.top = '0px';
+    });
+  }
+</script>

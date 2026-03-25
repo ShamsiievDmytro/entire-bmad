@@ -1,18 +1,69 @@
 ---
 // src/components/MarketCapCard.astro
-// Static empty card — hydrated in Story 3.2
+// Hydrated island — subscribes to marketStore for market cap + 24h range
 ---
 <section aria-label="Market data" class="card-glass p-4 sm:p-6">
   <span class="font-label text-text-secondary text-[12px] font-normal leading-[1.4]">
     Market Cap
   </span>
-  <div class="mt-2 min-h-[28px]">
-    <!-- Market cap value ($1.34T) populated by Story 3.2 -->
-  </div>
-  <span class="font-label text-text-secondary text-[12px] font-normal leading-[1.4] mt-3 block">
-    24h Range
-  </span>
-  <div class="mt-1 min-h-[20px]">
-    <!-- Range value ($66.9k — $68.9k) populated by Story 3.2 -->
+  <div class="market-data-container" data-loading>
+    <div class="mt-2 min-h-[28px]">
+      <span class="market-cap-value font-price text-text-primary text-[24px] font-medium leading-[1.1]">
+      </span>
+    </div>
+    <span class="font-label text-text-secondary text-[12px] font-normal leading-[1.4] mt-3 block">
+      24h Range
+    </span>
+    <div class="mt-1 min-h-[20px]">
+      <span class="range-value font-price text-text-primary text-[14px] font-normal leading-[1.1]">
+      </span>
+    </div>
   </div>
 </section>
+
+<style>
+  .market-data-container[data-loading] {
+    opacity: 0;
+  }
+
+  .market-data-container {
+    opacity: 1;
+    transition: opacity 300ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .market-data-container,
+    .market-data-container[data-loading] {
+      transition-duration: 0ms !important;
+    }
+
+    .market-data-container[data-loading] {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import { marketStore } from '../lib/stores/market-store';
+  import { formatMarketCap, formatRange } from '../lib/utils/format-utils';
+
+  const dataContainer = document.querySelector('.market-data-container');
+  const marketCapValue = document.querySelector('.market-cap-value');
+  const rangeValue = document.querySelector('.range-value');
+
+  if (dataContainer && marketCapValue && rangeValue) {
+    let hasReceivedData = false;
+
+    marketStore.subscribe((market) => {
+      if (market === null) return;
+
+      if (!hasReceivedData) {
+        hasReceivedData = true;
+        dataContainer.removeAttribute('data-loading');
+      }
+
+      marketCapValue.textContent = formatMarketCap(market.marketCap);
+      rangeValue.textContent = formatRange(market.low24h, market.high24h);
+    });
+  }
+</script>

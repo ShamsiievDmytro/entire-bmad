@@ -1,15 +1,188 @@
 ---
 // src/components/PriceCard.astro
-// Static empty card — hydrated in Story 2.3
+// Live price card island — hydrated via <script> block
 ---
+
 <section aria-label="Bitcoin price" class="card-glass p-4 sm:p-6">
   <span class="font-label text-text-secondary text-[12px] font-normal leading-[1.4]">
     Bitcoin BTC/USD
   </span>
-  <output aria-live="polite" class="block mt-2 min-h-[53px]">
-    <!-- Price value populated by Story 2.3 island script -->
-  </output>
-  <div class="mt-2 min-h-[24px]">
-    <!-- Change row (arrow + percentage + absolute) populated by Story 2.3 -->
+
+  <div class="price-container mt-3 h-[42px] sm:h-[56px]" data-loading>
+    <output
+      aria-live="polite"
+      class="price-value price-text sm:text-[48px] text-[36px]"
+      data-flash=""
+    >
+    </output>
+
+    <span
+      class="direction-arrow font-price text-xl font-medium leading-none ml-2"
+      data-direction="neutral"
+      aria-hidden="true"
+    >
+    </span>
+  </div>
+
+  <div class="change-row mt-2 flex items-center gap-2 font-price text-base font-medium leading-[1.1] min-h-[24px]">
+    <span class="change-percent"></span>
+    <span class="change-absolute"></span>
+  </div>
+
+  <div
+    class="stale-badge mt-2 text-status-stale font-label text-[11px] font-normal leading-[1.3]"
+    role="status"
+    aria-hidden="true"
+  >
+    Stale
   </div>
 </section>
+
+<style>
+  /* Fade-in on initial data load */
+  .price-container[data-loading] {
+    opacity: 0;
+  }
+
+  .price-container {
+    opacity: 1;
+    transition: opacity 300ms ease-out;
+  }
+
+  /* Price flash animation via data-flash attribute */
+  .price-value {
+    transition: color 400ms ease-out;
+  }
+
+  .price-value[data-flash="up"] {
+    color: var(--color-price-flash-up);
+    transition: color 0ms;
+  }
+
+  .price-value[data-flash="down"] {
+    color: var(--color-price-flash-down);
+    transition: color 0ms;
+  }
+
+  /* Direction arrow colors */
+  .direction-arrow[data-direction="up"] {
+    color: var(--color-price-up);
+  }
+
+  .direction-arrow[data-direction="down"] {
+    color: var(--color-price-down);
+  }
+
+  .direction-arrow[data-direction="neutral"] {
+    color: var(--color-text-primary);
+  }
+
+  /* Change row direction colors */
+  .change-row[data-change-direction="up"] {
+    color: var(--color-price-up);
+  }
+
+  .change-row[data-change-direction="down"] {
+    color: var(--color-price-down);
+  }
+
+  /* Stale badge transition */
+  .stale-badge {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 300ms ease-out, visibility 0ms 300ms;
+  }
+
+  .stale-badge.visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 300ms ease-out, visibility 0ms 0ms;
+  }
+
+  /* prefers-reduced-motion: disable ALL animations */
+  @media (prefers-reduced-motion: reduce) {
+    .price-container,
+    .price-value,
+    .price-value[data-flash="up"],
+    .price-value[data-flash="down"],
+    .stale-badge {
+      transition-duration: 0ms !important;
+    }
+
+    .price-container[data-loading] {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import { priceStore } from '../lib/stores/price-store';
+  import { statusStore } from '../lib/stores/status-store';
+  import { marketStore } from '../lib/stores/market-store';
+  import { formatPrice, formatPercent, formatAbsoluteChange } from '../lib/utils/format-utils';
+
+  const priceContainer = document.querySelector('.price-container') as HTMLElement;
+  const priceValue = document.querySelector('.price-value') as HTMLOutputElement;
+  const directionArrow = document.querySelector('.direction-arrow') as HTMLSpanElement;
+  const changePercent = document.querySelector('.change-percent') as HTMLSpanElement;
+  const changeAbsolute = document.querySelector('.change-absolute') as HTMLSpanElement;
+  const changeRow = document.querySelector('.change-row') as HTMLDivElement;
+  const staleBadge = document.querySelector('.stale-badge') as HTMLDivElement;
+
+  let lastFlashTime = 0;
+  const FLASH_THROTTLE_MS = 200;
+  let hasReceivedData = false;
+
+  function triggerFlash(direction: 'up' | 'down'): void {
+    const now = Date.now();
+    if (now - lastFlashTime < FLASH_THROTTLE_MS) return;
+    lastFlashTime = now;
+
+    priceValue.setAttribute('data-flash', direction);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        priceValue.setAttribute('data-flash', '');
+      });
+    });
+  }
+
+  priceStore.subscribe((tick) => {
+    if (tick === null) return;
+
+    if (!hasReceivedData) {
+      hasReceivedData = true;
+      priceContainer.removeAttribute('data-loading');
+    }
+
+    priceValue.textContent = formatPrice(tick.price);
+
+    const arrowMap = { up: '\u2191', down: '\u2193', neutral: '' } as const;
+    directionArrow.textContent = arrowMap[tick.direction];
+    directionArrow.setAttribute('data-direction', tick.direction);
+
+    if (tick.direction === 'up' || tick.direction === 'down') {
+      triggerFlash(tick.direction);
+    }
+  });
+
+  statusStore.subscribe((status) => {
+    if (!staleBadge) return;
+    if (status === 'stale') {
+      staleBadge.classList.add('visible');
+      staleBadge.setAttribute('aria-hidden', 'false');
+    } else {
+      staleBadge.classList.remove('visible');
+      staleBadge.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  marketStore.subscribe((market) => {
+    if (market === null) return;
+
+    const direction = market.changePercent24h >= 0 ? 'up' : 'down';
+    changeRow.setAttribute('data-change-direction', direction);
+    changePercent.textContent = formatPercent(market.changePercent24h);
+    changeAbsolute.textContent = formatAbsoluteChange(market.change24h);
+  });
+</script>

@@ -15,5 +15,14 @@ import '@fontsource/inter/400.css';
     <main class="w-full max-w-[720px] grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-6">
       <slot />
     </main>
+    <script>
+      import { ConnectionManager } from '../lib/services/connection-manager';
+      import { MarketDataService } from '../lib/services/market-data-service';
+      import { initTabTitleUpdater } from '../lib/services/tab-title-updater';
+
+      ConnectionManager.getInstance().connect();
+      MarketDataService.getInstance().start();
+      initTabTitleUpdater();
+    </script>
   </body>
 </html>

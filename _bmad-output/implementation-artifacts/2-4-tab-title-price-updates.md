@@ -1,6 +1,6 @@
 # Story 2.4: Tab Title Price Updates
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -17,34 +17,34 @@ So that I can see the price without switching to the Metrics tab.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create tab title updater module (AC: #1, #2, #3, #4)
-  - [ ] Create `src/lib/services/tab-title-updater.ts`
-  - [ ] Import `priceStore` from `../stores/price-store`
-  - [ ] Import `formatPrice` from `../utils/format-utils`
-  - [ ] Define `DEFAULT_TITLE` constant as `'Metrics'`
-  - [ ] Define `TITLE_SEPARATOR` constant as `' — '` (em dash with spaces)
-  - [ ] Implement `initTabTitleUpdater(): void` function that subscribes to `priceStore`
-  - [ ] In the subscription callback: if tick is `null`, set `document.title = DEFAULT_TITLE`; otherwise set `document.title = formatPrice(tick.price) + TITLE_SEPARATOR + DEFAULT_TITLE`
-  - [ ] Export `initTabTitleUpdater` as named export
+- [x] Task 1: Create tab title updater module (AC: #1, #2, #3, #4)
+  - [x] Create `src/lib/services/tab-title-updater.ts`
+  - [x] Import `priceStore` from `../stores/price-store`
+  - [x] Import `formatPrice` from `../utils/format-utils`
+  - [x] Define `DEFAULT_TITLE` constant as `'Metrics'`
+  - [x] Define `TITLE_SEPARATOR` constant as `' — '` (em dash with spaces)
+  - [x] Implement `initTabTitleUpdater(): void` function that subscribes to `priceStore`
+  - [x] In the subscription callback: if tick is `null`, set `document.title = DEFAULT_TITLE`; otherwise set `document.title = formatPrice(tick.price) + TITLE_SEPARATOR + DEFAULT_TITLE`
+  - [x] Export `initTabTitleUpdater` as named export
 
-- [ ] Task 2: Wire up initialization in Layout.astro (AC: #1, #3)
-  - [ ] Add import and call `initTabTitleUpdater()` in the service initialization `<script>` block in `src/layouts/Layout.astro`
-  - [ ] Ensure the call is placed alongside other service initializations (ConnectionManager, etc.)
+- [x] Task 2: Wire up initialization in Layout.astro (AC: #1, #3)
+  - [x] Add import and call `initTabTitleUpdater()` in the service initialization `<script>` block in `src/layouts/Layout.astro`
+  - [x] Ensure the call is placed alongside other service initializations (ConnectionManager, etc.)
 
-- [ ] Task 3: Create unit test (AC: #1, #2, #4)
-  - [ ] Create `src/lib/services/tab-title-updater.test.ts`
-  - [ ] Test: when priceStore is null, document.title is `'Metrics'`
-  - [ ] Test: when priceStore has a PriceTick, document.title is `'$68,432.17 — Metrics'`
-  - [ ] Test: uses `formatPrice()` output (verify formatted string appears in title)
-  - [ ] Test: title updates on each priceStore change
-  - [ ] Run `npm run test` to verify all pass
+- [x] Task 3: Create unit test (AC: #1, #2, #4)
+  - [x] Create `src/lib/services/tab-title-updater.test.ts`
+  - [x] Test: when priceStore is null, document.title is `'Metrics'`
+  - [x] Test: when priceStore has a PriceTick, document.title is `'$68,432.17 — Metrics'`
+  - [x] Test: uses `formatPrice()` output (verify formatted string appears in title)
+  - [x] Test: title updates on each priceStore change
+  - [x] Run `npm run test` to verify all pass
 
-- [ ] Task 4: Verify integration
-  - [ ] Verify tab title shows `Metrics` on initial page load (before WebSocket connects)
-  - [ ] Verify tab title updates to `$XX,XXX.XX — Metrics` when price data arrives
-  - [ ] Verify tab title continues to update on each subsequent price tick
-  - [ ] `npm run build` succeeds
-  - [ ] `npm run lint` passes
+- [x] Task 4: Verify integration
+  - [x] Verify tab title shows `Metrics` on initial page load (before WebSocket connects)
+  - [x] Verify tab title updates to `$XX,XXX.XX — Metrics` when price data arrives
+  - [x] Verify tab title continues to update on each subsequent price tick
+  - [x] `npm run build` succeeds
+  - [x] `npm run lint` passes
 
 ## Dev Notes
 
@@ -274,12 +274,28 @@ This story ONLY handles the tab title update. It does NOT:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
 
 ### Completion Notes List
 
+All 4 tasks completed. Created tab-title-updater service with 4 unit tests. Wired initialization into Layout.astro alongside ConnectionManager and MarketDataService. Build succeeds, all 75 tests pass across 6 files.
+
+AC coverage:
+- AC#1: Tab title updates to `$68,432.17 — Metrics` format on every PriceTick
+- AC#2: Uses `formatPrice()` from format-utils.ts for consistent formatting
+- AC#3: Updates on every price tick (no separate throttle)
+- AC#4: Shows `Metrics` when priceStore is null (initial state)
+
 ### File List
+
+- `src/lib/services/tab-title-updater.ts` (new) — Tab title update service subscribing to priceStore
+- `src/lib/services/tab-title-updater.test.ts` (new) — 4 unit tests covering null state, price display, updates, and revert
+- `src/layouts/Layout.astro` (modified) — Added initTabTitleUpdater() call to service initialization script
 
 ### Review Findings
 
 ### Change Log
+
+- 2026-03-25: Implemented Story 2.4 — Tab title price updates with formatPrice() integration and full test coverage

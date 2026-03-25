@@ -1,6 +1,6 @@
 # Story 2.2: WebSocket Connection Manager (Binance)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,36 +24,36 @@ So that I see real-time price updates without any action.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/lib/services/connection-manager.ts` (AC: #1, #5, #6, #7, #8, #9)
-  - [ ] Define `WS_BINANCE_URL` constant: `wss://stream.binance.com:9443/ws/btcusdt@trade`
-  - [ ] Implement `BinanceTradeMessage` interface for raw incoming messages
-  - [ ] Implement singleton `ConnectionManager` with private constructor and `getInstance()` static method
-  - [ ] Implement `connect()` method: sets `statusStore` to `'connecting'`, creates WebSocket, attaches listeners
-  - [ ] Implement `onopen` handler: sets `statusStore` to `'live'`
-  - [ ] Implement `onmessage` handler: parses JSON, calls `normalizeBinanceMessage()`, writes to `priceStore`
-  - [ ] Implement `onerror` handler: `console.warn()` only, no throw (error handling for this story is minimal — reconnection is Story 4.1)
-  - [ ] Implement `onclose` handler: `console.warn()` only (reconnection is Story 4.1)
-  - [ ] Implement `cleanup()` private method: close existing WebSocket, null the reference, remove listeners before creating new connections
-  - [ ] Implement `disconnect()` public method: calls `cleanup()` for external teardown
-- [ ] Task 2: Implement message normalization (AC: #2, #3, #8)
-  - [ ] Create `normalizeBinanceMessage(raw: BinanceTradeMessage, previousPrice: number | null): PriceTick`
-  - [ ] Parse `p` (price string) to `number` via `parseFloat()`
-  - [ ] Use `T` (trade time) as `timestamp` (milliseconds)
-  - [ ] Compute `direction`: `'up'` if price > previousPrice, `'down'` if price < previousPrice, `'neutral'` if equal or no previous price
-  - [ ] Store `previousPrice` as private instance variable for direction comparison
-- [ ] Task 3: Create `src/lib/services/connection-manager.test.ts` (AC: #11)
-  - [ ] Test: `normalizeBinanceMessage` produces correct `PriceTick` from raw Binance message
-  - [ ] Test: direction is `'neutral'` when no previous price exists
-  - [ ] Test: direction is `'up'` when current price > previous price
-  - [ ] Test: direction is `'down'` when current price < previous price
-  - [ ] Test: direction is `'neutral'` when current price === previous price
-  - [ ] Test: price string parsed correctly to number (e.g., `"68432.17"` → `68432.17`)
-  - [ ] Test: timestamp from `T` field is preserved
-  - [ ] Test: singleton pattern returns same instance
-- [ ] Task 4: Verify integration (AC: #4, #10)
-  - [ ] Verify `priceStore.set()` is called with normalized `PriceTick` on each message
-  - [ ] Verify `statusStore.set()` transitions: `'connecting'` → `'live'`
-  - [ ] NOTE: Do NOT add the `<script>` block to `Layout.astro` in this story — Story 2.3 or later will wire up the initialization. AC #10 documents the intended initialization mechanism only.
+- [x] Task 1: Create `src/lib/services/connection-manager.ts` (AC: #1, #5, #6, #7, #8, #9)
+  - [x] Define `WS_BINANCE_URL` constant: `wss://stream.binance.com:9443/ws/btcusdt@trade`
+  - [x] Implement `BinanceTradeMessage` interface for raw incoming messages
+  - [x] Implement singleton `ConnectionManager` with private constructor and `getInstance()` static method
+  - [x] Implement `connect()` method: sets `statusStore` to `'connecting'`, creates WebSocket, attaches listeners
+  - [x] Implement `onopen` handler: sets `statusStore` to `'live'`
+  - [x] Implement `onmessage` handler: parses JSON, calls `normalizeBinanceMessage()`, writes to `priceStore`
+  - [x] Implement `onerror` handler: `console.warn()` only, no throw (error handling for this story is minimal — reconnection is Story 4.1)
+  - [x] Implement `onclose` handler: `console.warn()` only (reconnection is Story 4.1)
+  - [x] Implement `cleanup()` private method: close existing WebSocket, null the reference, remove listeners before creating new connections
+  - [x] Implement `disconnect()` public method: calls `cleanup()` for external teardown
+- [x] Task 2: Implement message normalization (AC: #2, #3, #8)
+  - [x] Create `normalizeBinanceMessage(raw: BinanceTradeMessage, previousPrice: number | null): PriceTick`
+  - [x] Parse `p` (price string) to `number` via `parseFloat()`
+  - [x] Use `T` (trade time) as `timestamp` (milliseconds)
+  - [x] Compute `direction`: `'up'` if price > previousPrice, `'down'` if price < previousPrice, `'neutral'` if equal or no previous price
+  - [x] Store `previousPrice` as private instance variable for direction comparison
+- [x] Task 3: Create `src/lib/services/connection-manager.test.ts` (AC: #11)
+  - [x] Test: `normalizeBinanceMessage` produces correct `PriceTick` from raw Binance message
+  - [x] Test: direction is `'neutral'` when no previous price exists
+  - [x] Test: direction is `'up'` when current price > previous price
+  - [x] Test: direction is `'down'` when current price < previous price
+  - [x] Test: direction is `'neutral'` when current price === previous price
+  - [x] Test: price string parsed correctly to number (e.g., `"68432.17"` → `68432.17`)
+  - [x] Test: timestamp from `T` field is preserved
+  - [x] Test: singleton pattern returns same instance
+- [x] Task 4: Verify integration (AC: #4, #10)
+  - [x] Verify `priceStore.set()` is called with normalized `PriceTick` on each message
+  - [x] Verify `statusStore.set()` transitions: `'connecting'` → `'live'`
+  - [x] NOTE: Do NOT add the `<script>` block to `Layout.astro` in this story — Story 2.3 or later will wire up the initialization. AC #10 documents the intended initialization mechanism only.
 
 ## Dev Notes
 
@@ -291,3 +291,37 @@ Use `UPPER_SNAKE_CASE` per architecture naming conventions.
 - [Source: epics.md#Story 2.2] — acceptance criteria
 - [Source: epics.md#Story 4.1] — reconnection with backoff (NOT this story)
 - [Source: epics.md#Story 4.2] — CoinCap fallback (NOT this story)
+
+## File List
+
+- `src/lib/services/connection-manager.ts` (new) — ConnectionManager singleton with Binance WebSocket, message normalization, store writes
+- `src/lib/services/connection-manager.test.ts` (new) — 19 unit tests covering normalization, direction, singleton, integration, edge cases
+
+## Change Log
+
+- 2026-03-25: Implemented Story 2.2 — WebSocket ConnectionManager (Binance) with normalization, singleton pattern, and comprehensive tests
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- Created `ConnectionManager` as a singleton class with `connect()`, `disconnect()`, and private `cleanup()` methods
+- Exported `normalizeBinanceMessage()` as a pure function for direct unit testing
+- Added `resetInstance()` static method for test isolation (resetting singleton between tests)
+- Added guard for NaN/non-positive price values per Story 1.1 review finding
+- Used `MockWebSocket` class (not `vi.fn()`) for constructor-compatible mocking
+
+### Completion Notes
+
+All 4 tasks completed. 19 tests written and passing. Full regression suite (71 tests across 5 files) passes with no regressions. All 11 acceptance criteria satisfied:
+- AC#1: Connects to `wss://stream.binance.com:9443/ws/btcusdt@trade`
+- AC#2: Raw Binance messages normalized to PriceTick format
+- AC#3: Direction computed by comparing to previous price
+- AC#4: Normalized PriceTick written to priceStore (verified via integration test)
+- AC#5: statusStore set to 'live' on successful connection
+- AC#6: statusStore set to 'connecting' during initial connection
+- AC#7: Singleton pattern enforced — one instance, one WebSocket
+- AC#8: Raw WebSocket data never exposed; BinanceTradeMessage is private interface
+- AC#9: cleanup() nulls handlers and closes socket before new connections
+- AC#10: Layout.astro script block NOT added per dev notes (deferred to Story 2.3+)
+- AC#11: 19 tests cover normalization, direction, singleton, store writes, edge cases

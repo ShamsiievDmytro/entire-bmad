@@ -1,6 +1,6 @@
 # Story 4.3: Status Indicator & Stale Data Badge
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,29 +23,29 @@ so that I can trust the data when it's live and be aware when it's stale.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement StatusIndicator.astro as a hydrated island (AC: #1, #2, #3, #4, #5, #6, #9, #10)
-  - [ ] Replace the static placeholder from Story 1.4 with the reactive version
-  - [ ] Add `<div role="status" aria-live="polite">` wrapper (existing from 1.4)
-  - [ ] Add the dot element with dynamic color class
-  - [ ] Add the text element with dynamic state label
-  - [ ] Add scoped `<style>` block with all CSS (pulse keyframes, transitions, reduced-motion)
-  - [ ] Add `<script>` block subscribing to `statusStore`
-  - [ ] Update dot color, text content, and animation class on each status change
-- [ ] Task 2: Implement the stale badge behavior on PriceCard.astro (AC: #7, #8)
-  - [ ] Verify PriceCard.astro already has a stale badge element from Story 2.3
-  - [ ] Ensure the stale badge shows/hides based on `statusStore` value (already wired in Story 2.3 script)
-  - [ ] Ensure the stale badge fades out over 300ms when status leaves `'stale'`
-  - [ ] Verify that the stale badge does not replace or hide the price
-- [ ] Task 3: Manual testing and verification
-  - [ ] Verify all 5 connection states display correctly (connecting, live, reconnecting, stale, fallback)
-  - [ ] Verify pulse animation on reconnecting state
-  - [ ] Verify state transitions fade smoothly (300ms)
-  - [ ] Verify stale badge appears on PriceCard when stale
-  - [ ] Verify stale badge fades out when connection restores
-  - [ ] Verify prefers-reduced-motion disables all animations
-  - [ ] Verify screen reader announces state changes
-  - [ ] `npm run build` succeeds
-  - [ ] `npm run lint` passes
+- [x] Task 1: Implement StatusIndicator.astro as a hydrated island (AC: #1, #2, #3, #4, #5, #6, #9, #10)
+  - [x] Replace the static placeholder from Story 1.4 with the reactive version
+  - [x] Add `<div role="status" aria-live="polite">` wrapper (existing from 1.4)
+  - [x] Add the dot element with dynamic color class
+  - [x] Add the text element with dynamic state label
+  - [x] Add scoped `<style>` block with all CSS (pulse keyframes, transitions, reduced-motion)
+  - [x] Add `<script>` block subscribing to `statusStore`
+  - [x] Update dot color, text content, and animation class on each status change
+- [x] Task 2: Implement the stale badge behavior on PriceCard.astro (AC: #7, #8)
+  - [x] Verify PriceCard.astro already has a stale badge element from Story 2.3
+  - [x] Ensure the stale badge shows/hides based on `statusStore` value (already wired in Story 2.3 script)
+  - [x] Ensure the stale badge fades out over 300ms when status leaves `'stale'`
+  - [x] Verify that the stale badge does not replace or hide the price
+- [x] Task 3: Manual testing and verification
+  - [x] Verify all 5 connection states display correctly (connecting, live, reconnecting, stale, fallback)
+  - [x] Verify pulse animation on reconnecting state
+  - [x] Verify state transitions fade smoothly (300ms)
+  - [x] Verify stale badge appears on PriceCard when stale
+  - [x] Verify stale badge fades out when connection restores
+  - [x] Verify prefers-reduced-motion disables all animations
+  - [x] Verify screen reader announces state changes
+  - [x] `npm run build` succeeds
+  - [x] `npm run lint` passes
 
 ## Dev Notes
 
@@ -449,12 +449,39 @@ src/
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- ESLint parsing error with TypeScript `Record<>` generics in `.astro` `<script>` blocks — resolved by removing explicit TS type annotations (espree parser doesn't support TS syntax, eslint-plugin-astro uses espree for script blocks)
+- PriceCard stale badge was initially added by this story (Story 2.3 was pending), then Story 2.3 developer independently added the same pattern — final PriceCard includes stale badge from Story 2.3 with matching spec
 
 ### Completion Notes List
 
+- Replaced static StatusIndicator.astro placeholder with fully reactive hydrated island
+- All 5 connection states mapped: connecting (amber pulse), live (green), reconnecting (amber pulse), stale (red static), fallback (green "Live — CoinCap")
+- CSS pulse animation: 1.5s ease-in-out infinite, opacity 0.4-1.0
+- State transitions: 300ms ease-in-out on dot color, text opacity, and overall indicator opacity
+- prefers-reduced-motion: all transitions set to 0ms, animations disabled
+- Accessibility: role="status" aria-live="polite" on StatusIndicator wrapper and stale badge
+- Stale badge on PriceCard: visibility/opacity transition pattern (300ms fade), toggled via `visible` class
+- No barrel files, no raw color values, no JS animations — all per anti-patterns spec
+
 ### File List
+
+- `src/components/StatusIndicator.astro` — REPLACED (static placeholder → hydrated island with statusStore subscription, CSS animations, all 5 states)
+- `src/components/PriceCard.astro` — MODIFIED (added stale badge element and statusStore subscription; later expanded by Story 2.3 developer)
 
 ### Review Findings
 
+- [x] [Review][Dismiss] Missing `ConnectionStatus` type import in StatusIndicator script — documented workaround for espree parser limitation in `.astro` script blocks. Not a runtime issue.
+- [x] [Review][Dismiss] Stale badge uses `visibility/opacity` pattern instead of spec's initial `hidden` class — follows spec's own recommended improved pattern (spec lines 267-282).
+- [x] [Review][Dismiss] Initial static HTML shows "Live" while statusStore defaults to `'connecting'` — nanostores subscribe fires synchronously on subscribe, so hydration corrects immediately. Matches spec anti-pattern guidance.
+- [x] [Review][Dismiss] Unscoped DOM selectors (`document.querySelector`) — singleton components by architecture design. Not a defect.
+- [x] [Review][Defer] PriceCard flash animation clears `data-flash` after 2 rAF frames (~33ms) — may be too brief to perceive. Out of scope for Story 4.3 (belongs to Story 2.3).
+
+**Reviewer verdict: PASS** — All acceptance criteria met. No blocking issues. 0 decision-needed, 0 patch, 1 defer (out of scope), 4 dismissed.
+
 ### Change Log
+
+- 2026-03-25: Implemented Story 4.3 — StatusIndicator reactive island and PriceCard stale badge behavior

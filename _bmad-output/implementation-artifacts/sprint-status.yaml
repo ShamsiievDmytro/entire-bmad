@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25
-last_updated: 2026-03-25  # stories 1.2, 1.4, 2.1 done
+last_updated: 2026-03-25  # story 4.2 review complete, moved to done
 project: metrics
 project_key: NOKEY
 tracking_system: file-system
@@ -53,21 +53,22 @@ development_status:
   # Epic 2: Live Bitcoin Price Display
   epic-2: in-progress
   2-1-nano-stores-and-number-formatting-utilities: done
-  2-2-websocket-connection-manager-binance: ready-for-dev
-  2-3-live-price-card-with-direction-indicator: ready-for-dev
-  2-4-tab-title-price-updates: ready-for-dev
+  2-2-websocket-connection-manager-binance: review
+  2-3-live-price-card-with-direction-indicator: review
+  2-4-tab-title-price-updates: review
   epic-2-retrospective: optional
 
   # Epic 3: Market Context & Price Chart
   epic-3: in-progress
-  3-1-market-data-service-coingecko-rest-polling: ready-for-dev
-  3-2-market-cap-card: ready-for-dev
-  3-3-24h-sparkline-chart-with-hover-tooltip: ready-for-dev
+  3-1-market-data-service-coingecko-rest-polling: done
+  3-2-market-cap-card: done
+  3-3-24h-sparkline-chart-with-hover-tooltip: done
   epic-3-retrospective: optional
 
   # Epic 4: Connection Resilience & Reliability
   epic-4: in-progress
-  4-1-websocket-reconnection-with-exponential-backoff: ready-for-dev
-  4-2-coincap-fallback-and-rest-polling-fallback: ready-for-dev
-  4-3-status-indicator-and-stale-data-badge: ready-for-dev
+  4-1-websocket-reconnection-with-exponential-backoff: done
+  4-2-coincap-fallback-and-rest-polling-fallback: done
+  4-3-status-indicator-and-stale-data-badge: done
+  4-4-post-sprint-quality-fixes: done
   epic-4-retrospective: optional

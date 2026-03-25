@@ -1,6 +1,6 @@
 # Story 4.1: WebSocket Reconnection with Exponential Backoff
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,50 +21,50 @@ So that the live price feed resumes seamlessly after network interruptions.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add reconnection state and constants to ConnectionManager (AC: #1, #2)
-  - [ ] Add constants: `INITIAL_BACKOFF_MS = 1000`, `MAX_BACKOFF_MS = 30000`, `BACKOFF_MULTIPLIER = 2`
-  - [ ] Add private instance variables: `reconnectAttempt: number = 0`, `reconnectTimerId: ReturnType<typeof setTimeout> | null = null`
-  - [ ] Add private method `getBackoffDelay(): number` that computes `Math.min(INITIAL_BACKOFF_MS * (BACKOFF_MULTIPLIER ** this.reconnectAttempt), MAX_BACKOFF_MS)`
+- [x] Task 1: Add reconnection state and constants to ConnectionManager (AC: #1, #2)
+  - [x] Add constants: `INITIAL_BACKOFF_MS = 1000`, `MAX_BACKOFF_MS = 30000`, `BACKOFF_MULTIPLIER = 2`
+  - [x] Add private instance variables: `reconnectAttempt: number = 0`, `reconnectTimerId: ReturnType<typeof setTimeout> | null = null`
+  - [x] Add private method `getBackoffDelay(): number` that computes `Math.min(INITIAL_BACKOFF_MS * (BACKOFF_MULTIPLIER ** this.reconnectAttempt), MAX_BACKOFF_MS)`
 
-- [ ] Task 2: Implement `scheduleReconnect()` private method (AC: #1, #2, #3, #4)
-  - [ ] Set `statusStore` to `'reconnecting'` (only if not already `'reconnecting'`)
-  - [ ] Clear any existing `reconnectTimerId` via `clearTimeout()` before scheduling
-  - [ ] Compute delay via `getBackoffDelay()`
-  - [ ] Schedule `setTimeout(() => this.attemptReconnect(), delay)` and store timer ID in `reconnectTimerId`
-  - [ ] Increment `reconnectAttempt`
-  - [ ] Log reconnection attempt: `console.warn('Reconnecting in ${delay}ms (attempt ${this.reconnectAttempt})')`
+- [x] Task 2: Implement `scheduleReconnect()` private method (AC: #1, #2, #3, #4)
+  - [x] Set `statusStore` to `'reconnecting'` (only if not already `'reconnecting'`)
+  - [x] Clear any existing `reconnectTimerId` via `clearTimeout()` before scheduling
+  - [x] Compute delay via `getBackoffDelay()`
+  - [x] Schedule `setTimeout(() => this.attemptReconnect(), delay)` and store timer ID in `reconnectTimerId`
+  - [x] Increment `reconnectAttempt`
+  - [x] Log reconnection attempt: `console.warn('Reconnecting in ${delay}ms (attempt ${this.reconnectAttempt})')`
 
-- [ ] Task 3: Implement `attemptReconnect()` private method (AC: #3, #4)
-  - [ ] Call `this.cleanup()` (existing method from Story 2.2 — closes WebSocket, nulls handlers and reference)
-  - [ ] Call `this.connectBinance()` (renamed from `connect()` — see Task 4)
+- [x] Task 3: Implement `attemptReconnect()` private method (AC: #3, #4)
+  - [x] Call `this.cleanup()` (existing method from Story 2.2 — closes WebSocket, nulls handlers and reference)
+  - [x] Call `this.connectBinance()` (renamed from `connect()` — see Task 4)
 
-- [ ] Task 4: Modify existing `connect()` and event handlers (AC: #1, #3, #5, #6)
-  - [ ] Rename internal Binance connection logic to private `connectBinance()` method
-  - [ ] Keep public `connect()` as the entry point — it calls `connectBinance()` and resets `reconnectAttempt = 0`
-  - [ ] Modify `onopen` handler: set `statusStore` to `'live'`, reset `reconnectAttempt = 0`, clear `reconnectTimerId`
-  - [ ] Modify `onclose` handler: replace `console.warn` only with call to `this.scheduleReconnect()`
-  - [ ] Modify `onerror` handler: keep `console.warn()`, do NOT call `scheduleReconnect()` here (onclose always fires after onerror, so reconnect is handled there)
+- [x] Task 4: Modify existing `connect()` and event handlers (AC: #1, #3, #5, #6)
+  - [x] Rename internal Binance connection logic to private `connectBinance()` method
+  - [x] Keep public `connect()` as the entry point — it calls `connectBinance()` and resets `reconnectAttempt = 0`
+  - [x] Modify `onopen` handler: set `statusStore` to `'live'`, reset `reconnectAttempt = 0`, clear `reconnectTimerId`
+  - [x] Modify `onclose` handler: replace `console.warn` only with call to `this.scheduleReconnect()`
+  - [x] Modify `onerror` handler: keep `console.warn()`, do NOT call `scheduleReconnect()` here (onclose always fires after onerror, so reconnect is handled there)
 
-- [ ] Task 5: Extend `cleanup()` for timer management (AC: #4)
-  - [ ] Add `clearTimeout(this.reconnectTimerId)` and `this.reconnectTimerId = null` to existing `cleanup()`
-  - [ ] Existing WebSocket cleanup (null handlers, close, null reference) remains unchanged
+- [x] Task 5: Extend `cleanup()` for timer management (AC: #4)
+  - [x] Add `clearTimeout(this.reconnectTimerId)` and `this.reconnectTimerId = null` to existing `cleanup()`
+  - [x] Existing WebSocket cleanup (null handlers, close, null reference) remains unchanged
 
-- [ ] Task 6: Extend `disconnect()` public method (AC: #4)
-  - [ ] Call `this.cleanup()` (already present)
-  - [ ] Reset `this.reconnectAttempt = 0` to prevent stale backoff state on manual disconnect
-  - [ ] Set `statusStore` to `'connecting'` (neutral state after intentional disconnect)
+- [x] Task 6: Extend `disconnect()` public method (AC: #4)
+  - [x] Call `this.cleanup()` (already present)
+  - [x] Reset `this.reconnectAttempt = 0` to prevent stale backoff state on manual disconnect
+  - [x] Set `statusStore` to `'connecting'` (neutral state after intentional disconnect)
 
-- [ ] Task 7: Add/extend unit tests in `connection-manager.test.ts` (AC: #8)
-  - [ ] Test: `getBackoffDelay()` returns correct delays: 1000, 2000, 4000, 8000, 16000, 30000, 30000 (capped)
-  - [ ] Test: `scheduleReconnect()` sets statusStore to `'reconnecting'`
-  - [ ] Test: `scheduleReconnect()` clears previous timer before scheduling new one
-  - [ ] Test: successful reconnection resets `reconnectAttempt` to 0
-  - [ ] Test: successful reconnection sets statusStore to `'live'`
-  - [ ] Test: `cleanup()` clears reconnect timer
-  - [ ] Test: `disconnect()` resets reconnect attempt counter
-  - [ ] Test: `onclose` triggers `scheduleReconnect()` (not `onerror`)
-  - [ ] Test: priceStore is NOT cleared on disconnect (last known price preserved)
-  - [ ] Mock `setTimeout`/`clearTimeout` using `vi.useFakeTimers()`
+- [x] Task 7: Add/extend unit tests in `connection-manager.test.ts` (AC: #8)
+  - [x] Test: `getBackoffDelay()` returns correct delays: 1000, 2000, 4000, 8000, 16000, 30000, 30000 (capped)
+  - [x] Test: `scheduleReconnect()` sets statusStore to `'reconnecting'`
+  - [x] Test: `scheduleReconnect()` clears previous timer before scheduling new one
+  - [x] Test: successful reconnection resets `reconnectAttempt` to 0
+  - [x] Test: successful reconnection sets statusStore to `'live'`
+  - [x] Test: `cleanup()` clears reconnect timer
+  - [x] Test: `disconnect()` resets reconnect attempt counter
+  - [x] Test: `onclose` triggers `scheduleReconnect()` (not `onerror`)
+  - [x] Test: priceStore is NOT cleared on disconnect (last known price preserved)
+  - [x] Mock `setTimeout`/`clearTimeout` using `vi.useFakeTimers()`
 
 ## Dev Notes
 
@@ -332,8 +332,42 @@ src/lib/
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Initial test for backoff delays failed because inner loop double-fired onclose events (each creating a new WS that also triggered onclose). Fixed by simplifying: only trigger onclose once per iteration, don't trigger onopen, let attempt counter naturally increment.
+- Cleanup test failed because `vi.mocked(WebSocket).mock.instances` doesn't work with `vi.stubGlobal`. Fixed by tracking mockWsInstance reference identity instead.
 
 ### Completion Notes List
 
+- Added 3 constants: `INITIAL_BACKOFF_MS = 1000`, `MAX_BACKOFF_MS = 30000`, `BACKOFF_MULTIPLIER = 2`
+- Added 2 private instance variables: `reconnectAttempt`, `reconnectTimerId`
+- Added 4 private methods: `getBackoffDelay()`, `scheduleReconnect()`, `attemptReconnect()`, `connectBinance()`
+- Extracted Binance connection logic from `connect()` to private `connectBinance()`
+- `connect()` now resets `reconnectAttempt` and delegates to `connectBinance()`
+- `onopen` handler: sets 'live', resets attempt counter, clears timer
+- `onclose` handler: calls `scheduleReconnect()` instead of just logging
+- `onerror` handler: unchanged (log only, per WebSocket spec onclose follows onerror)
+- `cleanup()` extended: clears reconnect timer before WebSocket cleanup
+- `disconnect()` extended: resets attempt counter, sets statusStore to 'connecting'
+- priceStore is never cleared on disconnect — last known price preserved
+- 10 new reconnection tests added using `vi.useFakeTimers()` — all pass
+- All 85 tests pass (29 connection-manager, 56 others), build succeeds
+
 ### File List
+
+- `src/lib/services/connection-manager.ts` — MODIFIED (added reconnection with exponential backoff)
+- `src/lib/services/connection-manager.test.ts` — MODIFIED (added 10 reconnection tests)
+
+### Review Findings
+
+- [x] [Review][Dismiss] `connectBinance()` sets statusStore to `'connecting'` during reconnection attempts — brief `reconnecting -> connecting -> live` transition is spec-compliant (spec's own `connectBinance()` code does this). Status transitions happen within the same event loop tick for failed attempts, so the intermediate state is invisible to UI.
+- [x] [Review][Dismiss] `attemptReconnect()` calls `cleanup()` then `connectBinance()` which also calls `cleanup()` — redundant but safe, no side effects from double cleanup.
+- [x] [Review][Dismiss] No jitter in backoff — spec explicitly says "Do NOT add jitter to backoff — keep it simple for v1".
+
+**Reviewer verdict: PASS** — All 8 acceptance criteria met. Backoff sequence verified by tests. Timer lifecycle correct. Memory leak prevention proper. No blocking issues. 0 decision-needed, 0 patch, 0 defer, 3 dismissed.
+
+### Change Log
+
+- 2026-03-25: Implemented Story 4.1 — WebSocket reconnection with exponential backoff (1s-30s cap), timer cleanup, statusStore transitions

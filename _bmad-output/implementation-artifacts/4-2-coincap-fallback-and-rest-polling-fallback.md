@@ -1,6 +1,6 @@
 # Story 4.2: CoinCap Fallback & REST Polling Fallback
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,99 +22,99 @@ So that I always see price data regardless of which service is available.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add CoinCap and fallback constants (AC: #1, #5)
-  - [ ] Add `WS_COINCAP_URL = 'wss://ws.coincap.io/prices?assets=bitcoin'`
-  - [ ] Add `MAX_BINANCE_RETRIES = 3` — number of Binance reconnect attempts before falling back to CoinCap
-  - [ ] Add `MAX_COINCAP_RETRIES = 3` — number of CoinCap reconnect attempts before falling back to REST
-  - [ ] Add `STALE_THRESHOLD_MS = 30000` — time without price update before marking as stale
-  - [ ] Add `PROMOTION_CHECK_INTERVAL_MS = 60000` — interval to check if higher-priority source is available again
+- [x] Task 1: Add CoinCap and fallback constants (AC: #1, #5)
+  - [x] Add `WS_COINCAP_URL = 'wss://ws.coincap.io/prices?assets=bitcoin'`
+  - [x] Add `MAX_BINANCE_RETRIES = 3` — number of Binance reconnect attempts before falling back to CoinCap
+  - [x] Add `MAX_COINCAP_RETRIES = 3` — number of CoinCap reconnect attempts before falling back to REST
+  - [x] Add `STALE_THRESHOLD_MS = 30000` — time without price update before marking as stale
+  - [x] Add `PROMOTION_CHECK_INTERVAL_MS = 60000` — interval to check if higher-priority source is available again
 
-- [ ] Task 2: Add CoinCap message normalization (AC: #2)
-  - [ ] Define `CoinCapPriceMessage` interface: `{ bitcoin: string }` (price as string)
-  - [ ] Implement `normalizeCoinCapMessage(raw: CoinCapPriceMessage, previousPrice: number | null): PriceTick`
-  - [ ] Parse `raw.bitcoin` via `parseFloat()` to get price
-  - [ ] Use `Date.now()` for timestamp (CoinCap does not provide trade timestamps)
-  - [ ] Compute direction using same logic as `normalizeBinanceMessage` (compare to previousPrice)
-  - [ ] Guard: skip if `isNaN(price)` or `price <= 0`
-  - [ ] Export `normalizeCoinCapMessage` for unit testing
+- [x] Task 2: Add CoinCap message normalization (AC: #2)
+  - [x] Define `CoinCapPriceMessage` interface: `{ bitcoin: string }` (price as string)
+  - [x] Implement `normalizeCoinCapMessage(raw: CoinCapPriceMessage, previousPrice: number | null): PriceTick`
+  - [x] Parse `raw.bitcoin` via `parseFloat()` to get price
+  - [x] Use `Date.now()` for timestamp (CoinCap does not provide trade timestamps)
+  - [x] Compute direction using same logic as `normalizeBinanceMessage` (compare to previousPrice)
+  - [x] Guard: skip if `isNaN(price)` or `price <= 0`
+  - [x] Export `normalizeCoinCapMessage` for unit testing
 
-- [ ] Task 3: Implement fallback chain state machine (AC: #1, #3, #4, #5, #6)
-  - [ ] Add private enum/type `DataSource = 'binance' | 'coincap' | 'rest'`
-  - [ ] Add private instance variable `currentSource: DataSource = 'binance'`
-  - [ ] Add private instance variable `lastPriceUpdateTime: number = 0`
-  - [ ] Add private instance variable `staleCheckTimerId: ReturnType<typeof setTimeout> | null = null`
-  - [ ] Add private instance variable `promotionTimerId: ReturnType<typeof setTimeout> | null = null`
+- [x] Task 3: Implement fallback chain state machine (AC: #1, #3, #4, #5, #6)
+  - [x] Add private enum/type `DataSource = 'binance' | 'coincap' | 'rest'`
+  - [x] Add private instance variable `currentSource: DataSource = 'binance'`
+  - [x] Add private instance variable `lastPriceUpdateTime: number = 0`
+  - [x] Add private instance variable `staleCheckTimerId: ReturnType<typeof setTimeout> | null = null`
+  - [x] Add private instance variable `promotionTimerId: ReturnType<typeof setTimeout> | null = null`
 
-- [ ] Task 4: Implement `connectCoinCap()` private method (AC: #1, #2, #3)
-  - [ ] Call `this.cleanup()` to close any existing WebSocket
-  - [ ] Set `this.currentSource = 'coincap'`
-  - [ ] Set `statusStore` to `'reconnecting'` while connecting
-  - [ ] Create WebSocket to `WS_COINCAP_URL`
-  - [ ] `onopen`: set `statusStore` to `'fallback'`, reset `reconnectAttempt = 0`, start stale check timer, start promotion timer
-  - [ ] `onmessage`: parse JSON, call `normalizeCoinCapMessage()`, write to `priceStore`, update `lastPriceUpdateTime`
-  - [ ] `onerror`: `console.warn('CoinCap WebSocket error:', event)` only
-  - [ ] `onclose`: if `reconnectAttempt < MAX_COINCAP_RETRIES`, schedule reconnect to CoinCap; else fall back to REST mode
+- [x] Task 4: Implement `connectCoinCap()` private method (AC: #1, #2, #3)
+  - [x] Call `this.cleanup()` to close any existing WebSocket
+  - [x] Set `this.currentSource = 'coincap'`
+  - [x] Set `statusStore` to `'reconnecting'` while connecting
+  - [x] Create WebSocket to `WS_COINCAP_URL`
+  - [x] `onopen`: set `statusStore` to `'fallback'`, reset `reconnectAttempt = 0`, start stale check timer, start promotion timer
+  - [x] `onmessage`: parse JSON, call `normalizeCoinCapMessage()`, write to `priceStore`, update `lastPriceUpdateTime`
+  - [x] `onerror`: `console.warn('CoinCap WebSocket error:', event)` only
+  - [x] `onclose`: if `reconnectAttempt < MAX_COINCAP_RETRIES`, schedule reconnect to CoinCap; else fall back to REST mode
 
-- [ ] Task 5: Implement `enterRestMode()` private method (AC: #5, #6, #7)
-  - [ ] Set `this.currentSource = 'rest'`
-  - [ ] Call `this.cleanup()` to close any WebSocket
-  - [ ] Set `statusStore` to `'stale'`
-  - [ ] Start promotion timer to periodically attempt to reconnect to Binance
-  - [ ] Log: `console.warn('All WebSocket sources exhausted, relying on REST polling')`
-  - [ ] NOTE: this method does NOT start REST polling — MarketDataService (from Story 3.1) already polls CoinGecko every 60s independently. The `priceStore` may receive updates from REST if MarketDataService is configured to also write price data. For v1, REST mode means "no active WebSocket, last known price displayed, status is stale."
+- [x] Task 5: Implement `enterRestMode()` private method (AC: #5, #6, #7)
+  - [x] Set `this.currentSource = 'rest'`
+  - [x] Call `this.cleanup()` to close any WebSocket
+  - [x] Set `statusStore` to `'stale'`
+  - [x] Start promotion timer to periodically attempt to reconnect to Binance
+  - [x] Log: `console.warn('All WebSocket sources exhausted, relying on REST polling')`
+  - [x] NOTE: this method does NOT start REST polling — MarketDataService (from Story 3.1) already polls CoinGecko every 60s independently. The `priceStore` may receive updates from REST if MarketDataService is configured to also write price data. For v1, REST mode means "no active WebSocket, last known price displayed, status is stale."
 
-- [ ] Task 6: Modify `scheduleReconnect()` for fallback awareness (AC: #1, #4)
-  - [ ] Modify the reconnect scheduling to be source-aware:
+- [x] Task 6: Modify `scheduleReconnect()` for fallback awareness (AC: #1, #4)
+  - [x] Modify the reconnect scheduling to be source-aware:
     - If `currentSource === 'binance'` and `reconnectAttempt >= MAX_BINANCE_RETRIES`: call `connectCoinCap()` instead of retrying Binance
     - If `currentSource === 'coincap'` and `reconnectAttempt >= MAX_COINCAP_RETRIES`: call `enterRestMode()` instead of retrying CoinCap
     - Otherwise: schedule reconnect to current source with exponential backoff (existing logic from Story 4.1)
 
-- [ ] Task 7: Implement `attemptPromotion()` private method (AC: #8)
-  - [ ] If `currentSource` is `'coincap'` or `'rest'`: attempt to connect to Binance
-  - [ ] Use a single non-blocking WebSocket connection test: create WebSocket to Binance, set a 5-second timeout
-  - [ ] On successful open: close the test WebSocket, then call full `connect()` (which resets to Binance)
-  - [ ] On error/timeout: stay on current source, schedule next promotion check
-  - [ ] Schedule via `setTimeout(attemptPromotion, PROMOTION_CHECK_INTERVAL_MS)` stored in `promotionTimerId`
-  - [ ] `cleanup()` must clear `promotionTimerId`
+- [x] Task 7: Implement `attemptPromotion()` private method (AC: #8)
+  - [x] If `currentSource` is `'coincap'` or `'rest'`: attempt to connect to Binance
+  - [x] Use a single non-blocking WebSocket connection test: create WebSocket to Binance, set a 5-second timeout
+  - [x] On successful open: close the test WebSocket, then call full `connect()` (which resets to Binance)
+  - [x] On error/timeout: stay on current source, schedule next promotion check
+  - [x] Schedule via `setTimeout(attemptPromotion, PROMOTION_CHECK_INTERVAL_MS)` stored in `promotionTimerId`
+  - [x] `cleanup()` must clear `promotionTimerId`
 
-- [ ] Task 8: Implement stale data detection timer (AC: #6)
-  - [ ] Add `startStaleCheck()` private method: recursive `setTimeout` that checks if `Date.now() - lastPriceUpdateTime > STALE_THRESHOLD_MS`
-  - [ ] If stale and statusStore is not already `'stale'`: set `statusStore` to `'stale'`
-  - [ ] If not stale and statusStore was `'stale'`: restore to `'live'` or `'fallback'` based on `currentSource`
-  - [ ] Update `lastPriceUpdateTime = Date.now()` in every `onmessage` handler (Binance and CoinCap)
-  - [ ] Store timer ID in `staleCheckTimerId`, clear in `cleanup()`
-  - [ ] Check interval: 5000ms (check every 5 seconds)
+- [x] Task 8: Implement stale data detection timer (AC: #6)
+  - [x] Add `startStaleCheck()` private method: recursive `setTimeout` that checks if `Date.now() - lastPriceUpdateTime > STALE_THRESHOLD_MS`
+  - [x] If stale and statusStore is not already `'stale'`: set `statusStore` to `'stale'`
+  - [x] If not stale and statusStore was `'stale'`: restore to `'live'` or `'fallback'` based on `currentSource`
+  - [x] Update `lastPriceUpdateTime = Date.now()` in every `onmessage` handler (Binance and CoinCap)
+  - [x] Store timer ID in `staleCheckTimerId`, clear in `cleanup()`
+  - [x] Check interval: 5000ms (check every 5 seconds)
 
-- [ ] Task 9: Extend `cleanup()` for all timers (AC: #7)
-  - [ ] Clear `reconnectTimerId` (already from Story 4.1)
-  - [ ] Clear `staleCheckTimerId` and null it
-  - [ ] Clear `promotionTimerId` and null it
-  - [ ] All existing WebSocket cleanup remains unchanged
+- [x] Task 9: Extend `cleanup()` for all timers (AC: #7)
+  - [x] Clear `reconnectTimerId` (already from Story 4.1)
+  - [x] Clear `staleCheckTimerId` and null it
+  - [x] Clear `promotionTimerId` and null it
+  - [x] All existing WebSocket cleanup remains unchanged
 
-- [ ] Task 10: Modify `connect()` public method entry point
-  - [ ] Reset all state: `reconnectAttempt = 0`, `currentSource = 'binance'`
-  - [ ] Call `connectBinance()` (from Story 4.1)
-  - [ ] Start stale check timer
+- [x] Task 10: Modify `connect()` public method entry point
+  - [x] Reset all state: `reconnectAttempt = 0`, `currentSource = 'binance'`
+  - [x] Call `connectBinance()` (from Story 4.1)
+  - [x] Start stale check timer
 
-- [ ] Task 11: Modify `connectBinance()` to update `lastPriceUpdateTime` (AC: #6)
-  - [ ] In `onmessage` handler: add `this.lastPriceUpdateTime = Date.now()` after writing to priceStore
-  - [ ] In `onopen` handler: start stale check timer, start promotion clearing (no promotion needed when on Binance)
+- [x] Task 11: Modify `connectBinance()` to update `lastPriceUpdateTime` (AC: #6)
+  - [x] In `onmessage` handler: add `this.lastPriceUpdateTime = Date.now()` after writing to priceStore
+  - [x] In `onopen` handler: start stale check timer, start promotion clearing (no promotion needed when on Binance)
 
-- [ ] Task 12: Add/extend unit tests (AC: #9)
-  - [ ] Test: `normalizeCoinCapMessage` produces correct PriceTick from `{ bitcoin: "68432.17" }`
-  - [ ] Test: CoinCap direction computation (up/down/neutral) works identically to Binance
-  - [ ] Test: CoinCap message with invalid price (NaN, empty string) is skipped
-  - [ ] Test: fallback chain — Binance fails 3 times -> CoinCap connection attempted
-  - [ ] Test: fallback chain — CoinCap fails 3 times -> enters REST mode
-  - [ ] Test: Binance connection sets statusStore to 'live'
-  - [ ] Test: CoinCap connection sets statusStore to 'fallback'
-  - [ ] Test: REST mode sets statusStore to 'stale'
-  - [ ] Test: stale detection fires when no price update for >30s
-  - [ ] Test: promotion check attempts Binance reconnection from CoinCap/REST mode
-  - [ ] Test: successful promotion resets to Binance as primary source
-  - [ ] Test: cleanup() clears all timers (reconnect, stale check, promotion)
-  - [ ] Test: priceStore is never cleared during any fallback transition
-  - [ ] Mock `setTimeout`/`clearTimeout` with `vi.useFakeTimers()`
+- [x] Task 12: Add/extend unit tests (AC: #9)
+  - [x] Test: `normalizeCoinCapMessage` produces correct PriceTick from `{ bitcoin: "68432.17" }`
+  - [x] Test: CoinCap direction computation (up/down/neutral) works identically to Binance
+  - [x] Test: CoinCap message with invalid price (NaN, empty string) is skipped
+  - [x] Test: fallback chain — Binance fails 3 times -> CoinCap connection attempted
+  - [x] Test: fallback chain — CoinCap fails 3 times -> enters REST mode
+  - [x] Test: Binance connection sets statusStore to 'live'
+  - [x] Test: CoinCap connection sets statusStore to 'fallback'
+  - [x] Test: REST mode sets statusStore to 'stale'
+  - [x] Test: stale detection fires when no price update for >30s
+  - [x] Test: promotion check attempts Binance reconnection from CoinCap/REST mode
+  - [x] Test: successful promotion resets to Binance as primary source
+  - [x] Test: cleanup() clears all timers (reconnect, stale check, promotion)
+  - [x] Test: priceStore is never cleared during any fallback transition
+  - [x] Mock `setTimeout`/`clearTimeout` with `vi.useFakeTimers()`
 
 ## Dev Notes
 
@@ -432,9 +432,47 @@ src/lib/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
+- CoinCap reconnect counter bug: `connectCoinCap()` originally reset `reconnectAttempt = 0` on every call, preventing counter from reaching MAX_COINCAP_RETRIES since `attemptReconnect` calls `connectCoinCap`. Fixed by moving reset to `scheduleReconnect()` at the Binance-to-CoinCap transition point only.
+- Fallback chain test fix: Tests needed 4 onclose events (3 retries via timer + 1 final onclose to trigger the >=3 check), not 3.
+- Backoff test adjustment: After adding fallback chain, original 7-delay test changed to [1000, 2000, 4000] (only 3 Binance retries before fallback).
 
 ### Completion Notes List
+- All 12 tasks implemented and verified
+- 46 tests in connection-manager.test.ts (up from 19 in Story 2.2, 29 after Story 4.1)
+- 17 new tests: 7 CoinCap normalization + 10 fallback chain tests
+- Full test suite passes (104 total across project)
+- Build succeeds with no lint errors
+- No changes to store definitions, types, or other files outside scope
 
 ### File List
+| File | Action | Description |
+|------|--------|-------------|
+| `src/lib/services/connection-manager.ts` | MODIFIED | Added CoinCap connection, fallback chain state machine, stale detection, promotion check |
+| `src/lib/services/connection-manager.test.ts` | MODIFIED | Added 17 new tests for CoinCap normalization and fallback chain |
+
+### Review Findings
+
+- [x] [Review][Defer] Promotion canary WebSocket not tracked in `this.ws` — if `disconnect()` is called while a canary probe is in-flight, the canary's `onopen` could call `this.connect()` after disconnect. Low probability race condition; canary has 5s timeout and handlers null each other out. Not caused by this change (inherent to the canary pattern from the spec).
+- [x] [Review][Dismiss] `connect()` and `connectBinance().onopen` both call `startStaleCheck()` — redundant but safe; `startStaleCheck()` calls `stopStaleCheck()` first, preventing timer leak.
+- [x] [Review][Dismiss] `enterRestMode()` does not start stale check — correct because status is already `'stale'` in REST mode; no need to detect staleness.
+- [x] [Review][Dismiss] `connectBinance()` sets `this.currentSource = 'binance'` redundantly (already set in `connect()`) — safe, ensures correctness when called via `attemptReconnect()`.
+
+**Reviewer verdict: PASS** — All 9 acceptance criteria met. Fallback chain (Binance -> CoinCap -> REST) works correctly. CoinCap normalization correct. Stale detection at 30s threshold with 5s check interval. Promotion canary pattern properly isolated from main connection. All timers cleaned up in `cleanup()`. 104 tests pass. 0 decision-needed, 0 patch, 1 defer, 3 dismissed.
+
+### Change Log
+| Change | Reason |
+|--------|--------|
+| Added `WS_COINCAP_URL`, `MAX_BINANCE_RETRIES`, `MAX_COINCAP_RETRIES`, `STALE_THRESHOLD_MS`, `PROMOTION_CHECK_INTERVAL_MS`, `STALE_CHECK_INTERVAL_MS`, `PROMOTION_TIMEOUT_MS` constants | Fallback chain configuration |
+| Added `CoinCapPriceMessage` interface and `normalizeCoinCapMessage()` export | CoinCap message normalization (AC #2) |
+| Added `DataSource` type and `currentSource`, `lastPriceUpdateTime`, `staleCheckTimerId`, `promotionTimerId` instance vars | Fallback state machine tracking |
+| Added `connectCoinCap()` private method | CoinCap WebSocket connection with fallback status (AC #1, #3) |
+| Added `enterRestMode()` private method | REST fallback when all WS sources exhausted (AC #5, #6) |
+| Modified `scheduleReconnect()` for source-aware fallback | Binance->CoinCap->REST chain (AC #1, #4) |
+| Added `attemptPromotion()` and `schedulePromotionCheck()`/`stopPromotionCheck()` | Source promotion back to Binance (AC #8) |
+| Added `startStaleCheck()`/`stopStaleCheck()` | Stale data detection at 30s threshold (AC #6) |
+| Extended `cleanup()` to clear stale and promotion timers | Memory leak prevention (NFR17) |
+| Modified `connect()` to reset source and start stale check | Clean entry point for fallback chain |
+| Updated `connectBinance()` onmessage to track `lastPriceUpdateTime` | Stale detection support |
