@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "3bb4287aa9e3",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/1-4-empty-dashboard-cards.md",
+    "_bmad-output/implementation-artifacts/2-1-nano-stores-and-number-formatting-utilities.md",
+    "_bmad-output/implementation-artifacts/2-2-websocket-connection-manager-binance.md",
+    "_bmad-output/implementation-artifacts/2-3-live-price-card-with-direction-indicator.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3b/b4287aa9e3/0/metadata.json",
+      "transcript": "/3b/b4287aa9e3/0/full.jsonl",
+      "content_hash": "/3b/b4287aa9e3/0/content_hash.txt",
+      "prompt": "/3b/b4287aa9e3/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 8161,
+    "cache_read_tokens": 334654,
+    "output_tokens": 4896,
+    "api_call_count": 3
+  }
+}
