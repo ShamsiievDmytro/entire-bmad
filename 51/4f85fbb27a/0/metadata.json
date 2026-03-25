@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "514f85fbb27a",
+  "session_id": "43a3ff47-7787-42fd-b104-0a95ef56212c",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-25T13:48:39.569519Z",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "_bmad-output/planning-artifacts/epics.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "5c520e2b909b",
+  "token_usage": {
+    "input_tokens": 74,
+    "cache_creation_tokens": 131564,
+    "cache_read_tokens": 3295777,
+    "output_tokens": 25629,
+    "api_call_count": 45
+  },
+  "session_metrics": {
+    "turn_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-25T13:48:39.305676Z",
+    "agent_lines": 436,
+    "human_added": 377,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 813,
+    "agent_percentage": 53.62853628536285
+  }
+}
