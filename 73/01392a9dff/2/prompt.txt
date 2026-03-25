@@ -1,0 +1,26 @@
+/bmad-help
+
+---
+
+/bmad-product-brief
+
+---
+
+I have nothing to review so far, I would like to implement simple web application,
+We need to create simple page where we show realtime bitcoint price and that is it for now.
+We also need to consider modern and good-looking design
+
+---
+
+it is for personal use 
+Astro Js framework
+dark/crypto aesthetic works for me
+
+---
+
+24h change, market cap, or a mini price chart sounds good 
+local for now is fine
+
+---
+
+I am happy
