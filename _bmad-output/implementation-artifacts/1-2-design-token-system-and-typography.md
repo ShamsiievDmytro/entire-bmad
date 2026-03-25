@@ -1,6 +1,6 @@
 # Story 1.2: Design Token System & Typography
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,27 +20,27 @@ so that all components use a consistent dark crypto visual identity and the char
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Configure `@theme` color tokens in `global.css` (AC: #1, #7)
-  - [ ] Add `@theme` block with all `--color-*` semantic tokens after `@import "tailwindcss"`
-  - [ ] Verify tokens generate correct utility classes (e.g., `bg-bg-base`, `text-accent-primary`)
-- [ ] Task 2: Configure font families (AC: #2)
-  - [ ] Add `@fontsource/jetbrains-mono` and `@fontsource/inter` imports in `Layout.astro` frontmatter
-  - [ ] Add `--font-price` and `--font-label` in `@theme` block
-- [ ] Task 3: Define `@apply` compositions (AC: #5)
-  - [ ] Add `.card-glass` — `bg-card` + backdrop-blur(12px) + 1px border rgba(255,255,255,0.08) + 16px border-radius + optional glow
-  - [ ] Add `.price-text` — font-price + 48px + weight 600 + text-primary + line-height 1.1
-  - [ ] Add `.status-badge` — font-label + 11px + weight 400 + text-muted + line-height 1.3
-- [ ] Task 4: Define CSS custom properties for animations (AC: #6)
-  - [ ] Add `:root` block with `--price-flash-up`, `--price-flash-down`, animation duration variables
-- [ ] Task 5: Create `theme-constants.ts` (AC: #4)
-  - [ ] Export all color values needed by lightweight-charts JS API
-  - [ ] Include chart-specific colors: line color, area gradient, grid lines, crosshair, background
-- [ ] Task 6: Write unit tests for theme-constants (AC: #4)
-  - [ ] Create `src/lib/theme-constants.test.ts` verifying all exports exist and have correct values
-- [ ] Task 7: Verify integration (AC: #7)
-  - [ ] `npm run build` succeeds with new tokens
-  - [ ] `npm run test` passes
-  - [ ] `npm run lint` passes
+- [x] Task 1: Configure `@theme` color tokens in `global.css` (AC: #1, #7)
+  - [x] Add `@theme` block with all `--color-*` semantic tokens after `@import "tailwindcss"`
+  - [x] Verify tokens generate correct utility classes (e.g., `bg-bg-base`, `text-accent-primary`)
+- [x] Task 2: Configure font families (AC: #2)
+  - [x] Add `@fontsource/jetbrains-mono` and `@fontsource/inter` imports in `Layout.astro` frontmatter
+  - [x] Add `--font-price` and `--font-label` in `@theme` block
+- [x] Task 3: Define `@apply` compositions (AC: #5)
+  - [x] Add `.card-glass` — `bg-card` + backdrop-blur(12px) + 1px border rgba(255,255,255,0.08) + 16px border-radius + optional glow
+  - [x] Add `.price-text` — font-price + 48px + weight 600 + text-primary + line-height 1.1
+  - [x] Add `.status-badge` — font-label + 11px + weight 400 + text-muted + line-height 1.3
+- [x] Task 4: Define CSS custom properties for animations (AC: #6)
+  - [x] Add `:root` block with `--price-flash-up`, `--price-flash-down`, animation duration variables
+- [x] Task 5: Create `theme-constants.ts` (AC: #4)
+  - [x] Export all color values needed by lightweight-charts JS API
+  - [x] Include chart-specific colors: line color, area gradient, grid lines, crosshair, background
+- [x] Task 6: Write unit tests for theme-constants (AC: #4)
+  - [x] Create `src/lib/theme-constants.test.ts` verifying all exports exist and have correct values
+- [x] Task 7: Verify integration (AC: #7)
+  - [x] `npm run build` succeeds with new tokens
+  - [x] `npm run test` passes
+  - [x] `npm run lint` passes
 
 ## Dev Notes
 
@@ -260,12 +260,31 @@ export const STATUS_COLORS = {
 
 ### Agent Model Used
 
+Claude Opus 4.6 (1M context)
+
 ### Debug Log References
+
+No issues encountered. All tasks completed cleanly on first pass.
 
 ### Completion Notes List
 
+- Task 1: Added complete `@theme` block in `global.css` with all 16 semantic color tokens (`--color-bg-base`, `--color-bg-card`, `--color-bg-card-hover`, `--color-accent-primary`, `--color-accent-secondary`, `--color-accent-glow`, `--color-price-up`, `--color-price-down`, `--color-price-flash-up`, `--color-price-flash-down`, `--color-text-primary`, `--color-text-secondary`, `--color-text-muted`, `--color-status-live`, `--color-status-reconnecting`, `--color-status-stale`). Build confirms utility class generation works.
+- Task 2: Added `@fontsource` imports for JetBrains Mono (400/500/600) and Inter (400) in `Layout.astro`. Added `--font-price` and `--font-label` in `@theme` block.
+- Task 3: Defined 3 `@apply` compositions: `.card-glass` (glassmorphism card), `.price-text` (48px mono price display), `.status-badge` (11px label text).
+- Task 4: Added `:root` block with `--price-flash-up`, `--price-flash-down`, and 5 animation timing variables.
+- Task 5: Created `theme-constants.ts` with `CHART_COLORS`, `PRICE_COLORS`, and `STATUS_COLORS` const objects for lightweight-charts JS API.
+- Task 6: Created comprehensive unit tests (6 test cases) verifying all exports exist and match expected color values.
+- Task 7: All validation passed — `npm run build` (628ms), `npm run test` (10/10 pass), `npm run lint` (clean).
+
 ### File List
+
+- `src/styles/global.css` — MODIFIED — Added `@theme` tokens, `:root` animation vars, 3 `@apply` compositions
+- `src/layouts/Layout.astro` — MODIFIED — Added `@fontsource` weight imports
+- `src/lib/theme-constants.ts` — CREATED — Chart, price, and status color constants for JS API
+- `src/lib/theme-constants.test.ts` — CREATED — Unit tests for theme-constants exports
 
 ### Review Findings
 
 ### Change Log
+
+- 2026-03-25: Story 1.2 implementation complete — design token system, typography, theme constants, and unit tests

@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+@theme {
+  /* Background colors */
+  --color-bg-base: #0a0a0f;
+  --color-bg-card: #12121a;
+  --color-bg-card-hover: #1a1a2e;
+
+  /* Accent colors */
+  --color-accent-primary: #00f5ff;
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-glow: rgba(0, 245, 255, 0.15);
+
+  /* Price direction colors */
+  --color-price-up: #22c55e;
+  --color-price-down: #ef4444;
+  --color-price-flash-up: #00f5ff;
+  --color-price-flash-down: #ef4444;
+
+  /* Text colors */
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #a0a0b0;
+  --color-text-muted: #606070;
+
+  /* Status colors */
+  --color-status-live: #22c55e;
+  --color-status-reconnecting: #f59e0b;
+  --color-status-stale: #ef4444;
+
+  /* Font families */
+  --font-price: "JetBrains Mono", monospace;
+  --font-label: "Inter", sans-serif;
+}
+
+/* Runtime animation values — accessible via JS getComputedStyle */
+:root {
+  --price-flash-up: #00f5ff;
+  --price-flash-down: #ef4444;
+  --animation-fade-in: 300ms;
+  --animation-price-flash: 400ms;
+  --animation-chart-draw: 500ms;
+  --animation-state-transition: 300ms;
+  --animation-reconnect-pulse: 1.5s;
+}
+
+/* Utility compositions (MAX 3 — architecture mandate) */
+.card-glass {
+  @apply bg-bg-card rounded-2xl;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.price-text {
+  @apply font-price text-text-primary font-semibold leading-none;
+  font-size: 48px;
+  line-height: 1.1;
+}
+
+.status-badge {
+  @apply font-label text-text-muted font-normal;
+  font-size: 11px;
+  line-height: 1.3;
+}
