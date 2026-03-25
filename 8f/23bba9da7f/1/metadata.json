@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "8f23bba9da7f",
+  "session_id": "bba5fb40-1991-4e9d-9f8a-c865e8e1e6a9",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-25T14:52:30.956619Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/1-2-design-token-system-and-typography.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "src/layouts/Layout.astro",
+    "src/styles/global.css"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b0bc2a7f44ac",
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 26827,
+    "cache_read_tokens": 289125,
+    "output_tokens": 9784,
+    "api_call_count": 13
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-25T14:52:29.836914Z",
+    "agent_lines": 120,
+    "human_added": 2868,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2988,
+    "agent_percentage": 4.016064257028113
+  }
+}
