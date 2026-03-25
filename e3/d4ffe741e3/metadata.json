@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "e3d4ffe741e3",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/1-2-design-token-system-and-typography.md",
+    "_bmad-output/implementation-artifacts/1-3-page-shell-with-responsive-layout.md",
+    "_bmad-output/implementation-artifacts/1-4-empty-dashboard-cards.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "src/components/ChartCard.astro",
+    "src/components/MarketCapCard.astro",
+    "src/components/PriceCard.astro",
+    "src/components/StatusIndicator.astro",
+    "src/layouts/Layout.astro",
+    "src/pages/index.astro",
+    "src/styles/global.css"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e3/d4ffe741e3/0/metadata.json",
+      "transcript": "/e3/d4ffe741e3/0/full.jsonl",
+      "content_hash": "/e3/d4ffe741e3/0/content_hash.txt",
+      "prompt": "/e3/d4ffe741e3/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 5,
+    "cache_creation_tokens": 10983,
+    "cache_read_tokens": 54143,
+    "output_tokens": 591,
+    "api_call_count": 3
+  }
+}
