@@ -1,0 +1,259 @@
+---
+import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+
+interface Props {
+  checkpoints: CheckpointMeta[];
+}
+const { checkpoints } = Astro.props;
+
+const sorted = [...checkpoints].sort(
+  (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
+);
+const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+
+// Metric 1: agent_percentage time-series (lightweight-charts)
+const m1Series = sorted.map((c) => ({
+  time: Math.floor(new Date(c.commit_date).getTime() / 1000),
+  value: c.agent_percentage,
+}));
+
+// Metric 2: pure-AI commit rate stat card
+const pureAiCount = checkpoints.filter((c) => c.agent_percentage === 100).length;
+const pureAiRate =
+  checkpoints.length > 0 ? Math.round((pureAiCount / checkpoints.length) * 100) : 0;
+
+// Metric 3: human modification rate bar chart
+const m3Values = sorted.map(
+  (c) => c.agent_lines === 0 ? 0 : Math.round((c.human_modified / c.agent_lines) * 100 * 10) / 10,
+);
+
+// Metric 4: stacked bar — agent/human lines per checkpoint
+const m4Datasets = JSON.stringify([
+  { label: 'Agent Lines', data: sorted.map((c) => c.agent_lines), backgroundColor: '#8b5cf6' },
+  { label: 'Human Added', data: sorted.map((c) => c.human_added), backgroundColor: '#22c55e' },
+  {
+    label: 'Human Modified',
+    data: sorted.map((c) => c.human_modified),
+    backgroundColor: '#f59e0b',
+  },
+  {
+    label: 'Human Removed',
+    data: sorted.map((c) => c.human_removed),
+    backgroundColor: '#ef4444',
+  },
+]);
+
+// Metric 5: cumulative zero-human-touch lines stat card
+const m5Value = checkpoints
+  .filter((c) => c.human_added === 0 && c.human_modified === 0 && c.human_removed === 0)
+  .reduce((sum, c) => sum + c.agent_lines, 0);
+---
+
+<!-- Section heading -->
+<div class="col-span-full flex items-center gap-3 pt-2">
+  <h2 class="font-label text-text-primary font-semibold text-base whitespace-nowrap">Attribution</h2>
+  <div class="flex-1 h-px bg-white/5"></div>
+</div>
+
+<!-- Metric 1: Agent Percentage Over Time (wide) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Agent Percentage Over Time</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    AI-authored line share per checkpoint, ordered chronologically.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: agent_percentage, commit_date</p>
+  <div
+    id="metric-1"
+    style="height:220px"
+    data-series={JSON.stringify(m1Series)}
+  >
+  </div>
+</div>
+
+<!-- Metric 2: Pure-AI Commit Rate (stat card) -->
+<div class="card-glass p-5">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Pure-AI Commit Rate</h3>
+  <p class="font-label text-text-muted text-xs mb-4">
+    Percentage of checkpoints where every line was AI-authored.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-2">Source: agent_percentage</p>
+  {
+    checkpoints.length === 0 ? (
+      <div class="flex items-center justify-center h-16">
+        <span class="font-label text-text-muted text-sm">No data available</span>
+      </div>
+    ) : (
+      <div>
+        <div class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
+          {pureAiRate}%
+        </div>
+        <p class="font-label text-text-secondary text-sm mt-1">
+          {pureAiCount} of {checkpoints.length} commits fully AI-authored
+        </p>
+      </div>
+    )
+  }
+</div>
+
+<!-- Metric 3: Human Modification Rate -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Human Modification Rate</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Human-modified lines as a percentage of agent lines per checkpoint.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: human_modified, agent_lines</p>
+  <div style="position:relative; height:200px">
+    <canvas
+      id="metric-3"
+      data-labels={JSON.stringify(labels)}
+      data-values={JSON.stringify(m3Values)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 4: Line Contribution Breakdown (wide) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">
+    Line Contribution Breakdown
+  </h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Stacked view of agent, human-added, modified, and removed lines per checkpoint.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">
+    Source: agent_lines, human_added, human_modified, human_removed
+  </p>
+  <div style="position:relative; height:220px">
+    <canvas
+      id="metric-4"
+      data-labels={JSON.stringify(labels)}
+      data-datasets={m4Datasets}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 5: Zero-Human-Touch Lines (stat card) -->
+<div class="card-glass p-5">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Zero-Human-Touch Lines</h3>
+  <p class="font-label text-text-muted text-xs mb-4">
+    Cumulative agent lines in checkpoints with no human edits at all.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-2">
+    Source: agent_lines, human_added, human_modified, human_removed
+  </p>
+  {
+    checkpoints.length === 0 ? (
+      <div class="flex items-center justify-center h-16">
+        <span class="font-label text-text-muted text-sm">No data available</span>
+      </div>
+    ) : (
+      <div>
+        <div class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
+          {m5Value.toLocaleString()}
+        </div>
+        <p class="font-label text-text-secondary text-sm mt-1">lines untouched by humans</p>
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import { createChart, LineSeries } from 'lightweight-charts';
+  import { Chart, registerables } from 'chart.js';
+  import { CHART_COLORS } from '../lib/theme-constants';
+  import { DARK_CHART_OPTIONS } from '../lib/utils/ai-metrics-utils';
+
+  Chart.register(...registerables);
+
+  // Metric 1 — lightweight-charts line
+  const m1Container = document.getElementById('metric-1') as HTMLDivElement | null;
+  if (m1Container) {
+    const rawSeries: Array<{ time: number; value: number }> = JSON.parse(
+      m1Container.dataset.series ?? '[]',
+    );
+    if (!rawSeries.length) {
+      m1Container.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      const chart = createChart(m1Container, {
+        layout: { background: { color: 'transparent' }, textColor: CHART_COLORS.textColor },
+        grid: {
+          vertLines: { color: CHART_COLORS.gridLinesColor },
+          horzLines: { color: CHART_COLORS.gridLinesColor },
+        },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false, timeVisible: false },
+        handleScroll: false,
+        handleScale: false,
+        autoSize: true,
+      });
+      const series = chart.addSeries(LineSeries, {
+        color: CHART_COLORS.lineColor,
+        lineWidth: 2,
+        pointMarkersVisible: true,
+      });
+      const deduped = rawSeries.filter((p, i) => i === 0 || p.time !== rawSeries[i - 1].time);
+      series.setData(deduped);
+      chart.timeScale().fitContent();
+    }
+  }
+
+  // Metric 3 — Chart.js bar
+  const m3Canvas = document.getElementById('metric-3') as HTMLCanvasElement | null;
+  if (m3Canvas) {
+    const labels: string[] = JSON.parse(m3Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m3Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p3 = m3Canvas.parentElement;
+      if (p3) p3.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m3Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#f59e0b', borderRadius: 3 }],
+        },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            tooltip: {
+              ...DARK_CHART_OPTIONS.plugins.tooltip,
+              callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(1)}%` },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 4 — Chart.js stacked bar
+  const m4Canvas = document.getElementById('metric-4') as HTMLCanvasElement | null;
+  if (m4Canvas) {
+    const labels: string[] = JSON.parse(m4Canvas.dataset.labels ?? '[]');
+    const datasets: Array<{ label: string; data: number[]; backgroundColor: string }> = JSON.parse(
+      m4Canvas.dataset.datasets ?? '[]',
+    );
+    if (!labels.length) {
+      const p4 = m4Canvas.parentElement;
+      if (p4) p4.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      const dsStyled = datasets.map((ds) => ({ ...ds, borderRadius: 2 }));
+      new Chart(m4Canvas, {
+        type: 'bar',
+        data: { labels, datasets: dsStyled },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            legend: { display: true, labels: { color: '#a0a0b0', font: { family: 'Inter' } } },
+          },
+          scales: {
+            ...DARK_CHART_OPTIONS.scales,
+            x: { ...DARK_CHART_OPTIONS.scales.x, stacked: true },
+            y: { ...DARK_CHART_OPTIONS.scales.y, stacked: true },
+          },
+        },
+      });
+    }
+  }
+</script>

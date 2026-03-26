@@ -1,0 +1,220 @@
+---
+import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+import { computeRollingAverage } from '../lib/utils/ai-metrics-utils';
+
+interface Props {
+  checkpoints: CheckpointMeta[];
+}
+const { checkpoints } = Astro.props;
+
+const sorted = [...checkpoints].sort(
+  (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
+);
+const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+
+// Metric 18: commit activity timeline scatter (per-point colors)
+const m18Points = sorted.map((c) => ({
+  x: new Date(c.commit_date).getTime(),
+  y: c.agent_percentage,
+  color:
+    c.agent_percentage >= 70 ? '#22c55e' : c.agent_percentage >= 40 ? '#f59e0b' : '#ef4444',
+}));
+
+// Metric 19: cadence in minutes between consecutive checkpoints (N-1 bars; first checkpoint skipped)
+// Use `sorted` directly to guarantee label/value index alignment
+const cadenceRaw = sorted.map((c, i) =>
+  i === 0
+    ? 0
+    : Math.round(
+        (new Date(c.commit_date).getTime() - new Date(sorted[i - 1].commit_date).getTime()) / 60_000,
+      ),
+);
+const cadenceValues = cadenceRaw.slice(1);
+const cadenceLabels = sorted.slice(1).map((c) => c.checkpoint_id.slice(0, 8));
+
+// Metric 20: rolling average (window=3) time-series (lightweight-charts)
+const agentPcts = sorted.map((c) => c.agent_percentage);
+const rollingAvg = computeRollingAverage(agentPcts, 3);
+const m20Series = sorted.map((c, i) => ({
+  time: Math.floor(new Date(c.commit_date).getTime() / 1000),
+  value: Math.round(rollingAvg[i] * 10) / 10,
+}));
+---
+
+<!-- Section heading -->
+<div class="col-span-full flex items-center gap-3 pt-2">
+  <h2 class="font-label text-text-primary font-semibold text-base whitespace-nowrap">Temporal</h2>
+  <div class="flex-1 h-px bg-white/5"></div>
+</div>
+
+<!-- Metric 18: Commit Activity Timeline (wide scatter) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Commit Activity Timeline</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Checkpoints on a time axis coloured by AI percentage: green ≥70%, amber 40–69%, red &lt;40%.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: commit_date, agent_percentage</p>
+  <div style="position:relative; height:220px">
+    <canvas
+      id="metric-18"
+      data-points={JSON.stringify(m18Points)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 19: Checkpoint Cadence -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Checkpoint Cadence</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Time delta in minutes between consecutive checkpoints, sorted chronologically.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: commit_date</p>
+  <div style="position:relative; height:180px">
+    <canvas
+      id="metric-19"
+      data-labels={JSON.stringify(cadenceLabels)}
+      data-values={JSON.stringify(cadenceValues)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 20: Attribution Trend (rolling avg, wide) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Attribution Trend (Rolling Avg)</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    3-checkpoint rolling average of agent percentage, showing the long-term AI attribution trend.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: agent_percentage, commit_date</p>
+  <div
+    id="metric-20"
+    style="height:200px"
+    data-series={JSON.stringify(m20Series)}
+  >
+  </div>
+</div>
+
+<script>
+  import { createChart, LineSeries } from 'lightweight-charts';
+  import { Chart, registerables } from 'chart.js';
+  import { CHART_COLORS } from '../lib/theme-constants';
+  import { DARK_CHART_OPTIONS } from '../lib/utils/ai-metrics-utils';
+
+  Chart.register(...registerables);
+
+  // Metric 18 — scatter with per-point colors
+  const m18Canvas = document.getElementById('metric-18') as HTMLCanvasElement | null;
+  if (m18Canvas) {
+    const rawPoints: Array<{ x: number; y: number; color: string }> = JSON.parse(
+      m18Canvas.dataset.points ?? '[]',
+    );
+    if (!rawPoints.length) {
+      const p18 = m18Canvas.parentElement;
+      if (p18) p18.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m18Canvas, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              data: rawPoints.map((p) => ({ x: p.x, y: p.y })),
+              backgroundColor: rawPoints.map((p) => p.color),
+              pointRadius: 6,
+              pointHoverRadius: 8,
+            },
+          ],
+        },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            tooltip: {
+              ...DARK_CHART_OPTIONS.plugins.tooltip,
+              callbacks: {
+                label: (ctx) => {
+                  const x = new Date(ctx.parsed.x).toLocaleDateString();
+                  return ` ${x}: ${ctx.parsed.y}%`;
+                },
+              },
+            },
+          },
+          scales: {
+            ...DARK_CHART_OPTIONS.scales,
+            x: {
+              ...DARK_CHART_OPTIONS.scales.x,
+              ticks: {
+                ...DARK_CHART_OPTIONS.scales.x.ticks,
+                callback: (val) => new Date(val as number).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+              },
+            },
+            y: {
+              ...DARK_CHART_OPTIONS.scales.y,
+              title: { display: true, text: 'Agent %', color: '#606070', font: { family: 'Inter', size: 10 } },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 19 — bar chart (cadence)
+  const m19Canvas = document.getElementById('metric-19') as HTMLCanvasElement | null;
+  if (m19Canvas) {
+    const labels: string[] = JSON.parse(m19Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m19Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p19 = m19Canvas.parentElement;
+      if (p19) p19.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m19Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#a0a0b0', borderRadius: 3 }],
+        },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            tooltip: {
+              ...DARK_CHART_OPTIONS.plugins.tooltip,
+              callbacks: { label: (ctx) => ` ${ctx.parsed.y} min` },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 20 — lightweight-charts line (rolling average)
+  const m20Container = document.getElementById('metric-20') as HTMLDivElement | null;
+  if (m20Container) {
+    const rawSeries: Array<{ time: number; value: number }> = JSON.parse(
+      m20Container.dataset.series ?? '[]',
+    );
+    if (!rawSeries.length) {
+      m20Container.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      const chart = createChart(m20Container, {
+        layout: { background: { color: 'transparent' }, textColor: CHART_COLORS.textColor },
+        grid: {
+          vertLines: { color: CHART_COLORS.gridLinesColor },
+          horzLines: { color: CHART_COLORS.gridLinesColor },
+        },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false, timeVisible: false },
+        handleScroll: false,
+        handleScale: false,
+        autoSize: true,
+      });
+      const series = chart.addSeries(LineSeries, {
+        color: CHART_COLORS.lineColor,
+        lineWidth: 2,
+        pointMarkersVisible: true,
+      });
+      const deduped20 = rawSeries.filter((p, i) => i === 0 || p.time !== rawSeries[i - 1].time);
+      series.setData(deduped20);
+      chart.timeScale().fitContent();
+    }
+  }
+</script>

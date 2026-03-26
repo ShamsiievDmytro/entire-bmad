@@ -1,0 +1,243 @@
+---
+import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+import {
+  aggregateBmadCommands,
+  classifyPromptType,
+  classifyFileLayer,
+  uniqueSessionCount,
+} from '../lib/utils/ai-metrics-utils';
+
+interface Props {
+  checkpoints: CheckpointMeta[];
+}
+const { checkpoints } = Astro.props;
+
+const sorted = [...checkpoints].sort(
+  (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
+);
+const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+
+// Metric 14: BMAD command frequency (horizontal bar)
+const bmadAgg = aggregateBmadCommands(checkpoints);
+const m14Labels = bmadAgg.map((e) => e.command);
+const m14Values = bmadAgg.map((e) => e.count);
+
+// Metric 15: prompt type distribution (doughnut)
+const promptCounts = { 'Slash Command': 0, 'Free-form': 0, Continuation: 0 };
+for (const cp of checkpoints) {
+  for (const turn of cp.turns) {
+    promptCounts[classifyPromptType(turn.prompt_txt)]++;
+  }
+}
+
+// Metric 16: file layer stacked bar per checkpoint
+const FILE_LAYERS = ['components', 'services', 'stores', 'utils', 'docs', 'other'] as const;
+const FILE_LAYER_COLORS: Record<string, string> = {
+  components: '#8b5cf6',
+  services: '#00f5ff',
+  stores: '#22c55e',
+  utils: '#f59e0b',
+  docs: '#a0a0b0',
+  other: '#606070',
+};
+const m16Datasets = JSON.stringify(
+  FILE_LAYERS.map((layer) => ({
+    label: layer.charAt(0).toUpperCase() + layer.slice(1),
+    data: sorted.map((c) => c.files_touched.filter((f) => classifyFileLayer(f) === layer).length),
+    backgroundColor: FILE_LAYER_COLORS[layer],
+  })),
+);
+
+// Metric 17: unique session count per checkpoint
+const m17Values = sorted.map((c) => uniqueSessionCount(c));
+---
+
+<!-- Section heading -->
+<div class="col-span-full flex items-center gap-3 pt-2">
+  <h2 class="font-label text-text-primary font-semibold text-base whitespace-nowrap">
+    Behavioral / SDLC
+  </h2>
+  <div class="flex-1 h-px bg-white/5"></div>
+</div>
+
+<!-- Metric 14: BMAD Command Frequency (wide horizontal bar) -->
+<div class="card-glass p-4 lg:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">BMAD Command Frequency</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Aggregated usage count of each BMAD slash command across all checkpoints, sorted by frequency.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: bmad_commands</p>
+  <div style="position:relative; height:220px">
+    <canvas
+      id="metric-14"
+      data-labels={JSON.stringify(m14Labels)}
+      data-values={JSON.stringify(m14Values)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 15: Prompt Type Distribution (doughnut) -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Prompt Type Distribution</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Classification of all turn prompts: slash commands, free-form text, or empty continuations.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: turns[].prompt_txt</p>
+  <div style="position:relative; height:200px">
+    <canvas
+      id="metric-15"
+      data-labels={JSON.stringify(Object.keys(promptCounts))}
+      data-values={JSON.stringify(Object.values(promptCounts))}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 16: Files Touched by Layer (wide) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Files Touched by Layer</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Stacked count of files changed per checkpoint, grouped by architectural layer.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: files_touched</p>
+  <div style="position:relative; height:220px">
+    <canvas
+      id="metric-16"
+      data-labels={JSON.stringify(labels)}
+      data-datasets={m16Datasets}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 17: Unique Session Count -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Unique Sessions per Checkpoint</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Number of distinct work sessions that contributed to each checkpoint.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: turns[].session_id</p>
+  <div style="position:relative; height:180px">
+    <canvas
+      id="metric-17"
+      data-labels={JSON.stringify(labels)}
+      data-values={JSON.stringify(m17Values)}
+    ></canvas>
+  </div>
+</div>
+
+<script>
+  import { Chart, registerables } from 'chart.js';
+  import { DARK_CHART_OPTIONS } from '../lib/utils/ai-metrics-utils';
+
+  Chart.register(...registerables);
+
+  // Metric 14 — horizontal bar
+  const m14Canvas = document.getElementById('metric-14') as HTMLCanvasElement | null;
+  if (m14Canvas) {
+    const labels: string[] = JSON.parse(m14Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m14Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p14 = m14Canvas.parentElement;
+      if (p14) p14.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m14Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#8b5cf6', borderRadius: 3 }],
+        },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          indexAxis: 'y' as const,
+          scales: {
+            x: { ...DARK_CHART_OPTIONS.scales.x },
+            y: { ...DARK_CHART_OPTIONS.scales.y, ticks: { ...DARK_CHART_OPTIONS.scales.y.ticks, font: { family: 'Inter', size: 10 } } },
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 15 — doughnut
+  const m15Canvas = document.getElementById('metric-15') as HTMLCanvasElement | null;
+  if (m15Canvas) {
+    const labels: string[] = JSON.parse(m15Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m15Canvas.dataset.values ?? '[]');
+    const total = values.reduce((a, b) => a + b, 0);
+    if (!total) {
+      const p15 = m15Canvas.parentElement;
+      if (p15) p15.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m15Canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [
+            {
+              data: values,
+              backgroundColor: ['#00f5ff', '#8b5cf6', '#a0a0b0'],
+              borderWidth: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { color: '#a0a0b0', font: { family: 'Inter', size: 10 }, boxWidth: 12, padding: 8 } },
+            tooltip: DARK_CHART_OPTIONS.plugins.tooltip,
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 16 — stacked bar (file layers)
+  const m16Canvas = document.getElementById('metric-16') as HTMLCanvasElement | null;
+  if (m16Canvas) {
+    const labels: string[] = JSON.parse(m16Canvas.dataset.labels ?? '[]');
+    const datasets: Array<{ label: string; data: number[]; backgroundColor: string }> = JSON.parse(
+      m16Canvas.dataset.datasets ?? '[]',
+    );
+    if (!labels.length) {
+      const p16 = m16Canvas.parentElement;
+      if (p16) p16.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m16Canvas, {
+        type: 'bar',
+        data: { labels, datasets: datasets.map((ds) => ({ ...ds, borderRadius: 2 })) },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            legend: { display: true, labels: { color: '#a0a0b0', font: { family: 'Inter', size: 10 }, boxWidth: 10, padding: 6 } },
+          },
+          scales: {
+            ...DARK_CHART_OPTIONS.scales,
+            x: { ...DARK_CHART_OPTIONS.scales.x, stacked: true },
+            y: { ...DARK_CHART_OPTIONS.scales.y, stacked: true },
+          },
+        },
+      });
+    }
+  }
+
+  // Metric 17 — bar chart
+  const m17Canvas = document.getElementById('metric-17') as HTMLCanvasElement | null;
+  if (m17Canvas) {
+    const labels: string[] = JSON.parse(m17Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m17Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p17 = m17Canvas.parentElement;
+      if (p17) p17.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m17Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#00f5ff', borderRadius: 3 }],
+        },
+        options: DARK_CHART_OPTIONS,
+      });
+    }
+  }
+</script>

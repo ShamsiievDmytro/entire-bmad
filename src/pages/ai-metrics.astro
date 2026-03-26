@@ -1,0 +1,78 @@
+---
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import AiMetricsLayout from '../layouts/AiMetricsLayout.astro';
+import AiAttributionSection from '../components/AiAttributionSection.astro';
+import AiTokenSection from '../components/AiTokenSection.astro';
+import AiQualitySection from '../components/AiQualitySection.astro';
+import AiBehavioralSection from '../components/AiBehavioralSection.astro';
+import AiTemporalSection from '../components/AiTemporalSection.astro';
+import type { CheckpointsCache } from '../lib/utils/ai-metrics-utils';
+
+const cachePath = resolve('./src/data/checkpoints-cache.json');
+let cache: CheckpointsCache | null = null;
+if (existsSync(cachePath)) {
+  try {
+    cache = JSON.parse(readFileSync(cachePath, 'utf-8')) as CheckpointsCache;
+  } catch {
+    // malformed or corrupt cache — treat as missing
+  }
+}
+
+const checkpoints = cache?.checkpoints ?? [];
+const generatedAtDisplay = cache
+  ? (() => {
+      const d = new Date(cache.meta.generatedAt ?? '');
+      return isNaN(d.getTime()) ? 'Unknown' : d.toLocaleString();
+    })()
+  : '';
+---
+
+<AiMetricsLayout>
+  {
+    cache === null ? (
+      <div class="card-glass p-8 text-center">
+        <p class="font-label text-text-primary font-semibold text-lg mb-2">Cache missing</p>
+        <p class="font-label text-text-secondary text-sm mb-4">
+          The checkpoints cache file is not present. Run the fetch script to populate it.
+        </p>
+        <code class="font-price text-accent-primary text-sm bg-bg-card px-3 py-1 rounded-lg border border-white/10">
+          npm run fetch-checkpoints
+        </code>
+      </div>
+    ) : (
+      <>
+        <div class="card-glass p-4 mb-8">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div>
+              <p class="font-label text-text-muted text-xs">Repository</p>
+              <p class="font-label text-accent-primary text-sm font-medium">{cache.meta.repo}</p>
+            </div>
+            <div>
+              <p class="font-label text-text-muted text-xs">Branch</p>
+              <p class="font-label text-text-secondary text-sm">{cache.meta.branch}</p>
+            </div>
+            <div>
+              <p class="font-label text-text-muted text-xs">Checkpoints</p>
+              <p class="font-label text-text-primary text-sm font-semibold">{cache.meta.checkpointCount}</p>
+            </div>
+            <div>
+              <p class="font-label text-text-muted text-xs">Generated</p>
+              <p class="font-label text-text-secondary text-sm">
+                {generatedAtDisplay}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AiAttributionSection checkpoints={checkpoints} />
+          <AiTokenSection checkpoints={checkpoints} />
+          <AiQualitySection checkpoints={checkpoints} />
+          <AiBehavioralSection checkpoints={checkpoints} />
+          <AiTemporalSection checkpoints={checkpoints} />
+        </div>
+      </>
+    )
+  }
+</AiMetricsLayout>

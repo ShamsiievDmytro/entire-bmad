@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25
-last_updated: 2026-03-25  # story 4.2 review complete, moved to done
+last_updated: 2026-03-26 # story 5-2 done
 project: metrics
 project_key: NOKEY
 tracking_system: file-system
@@ -53,9 +53,9 @@ development_status:
   # Epic 2: Live Bitcoin Price Display
   epic-2: in-progress
   2-1-nano-stores-and-number-formatting-utilities: done
-  2-2-websocket-connection-manager-binance: review
-  2-3-live-price-card-with-direction-indicator: review
-  2-4-tab-title-price-updates: review
+  2-2-websocket-connection-manager-binance: done
+  2-3-live-price-card-with-direction-indicator: done
+  2-4-tab-title-price-updates: done
   epic-2-retrospective: optional
 
   # Epic 3: Market Context & Price Chart
@@ -72,3 +72,8 @@ development_status:
   4-3-status-indicator-and-stale-data-badge: done
   4-4-post-sprint-quality-fixes: done
   epic-4-retrospective: optional
+
+  # Epic 5: AI Metrics Dashboard
+  epic-5: in-progress
+  5-1-fetch-script-and-checkpoints-cache: done
+  5-2-ai-metrics-dashboard-page: done

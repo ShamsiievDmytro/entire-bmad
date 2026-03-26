@@ -1,0 +1,225 @@
+---
+import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+
+interface Props {
+  checkpoints: CheckpointMeta[];
+}
+const { checkpoints } = Astro.props;
+
+const sorted = [...checkpoints].sort(
+  (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
+);
+const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+
+// Metric 10: friction count per checkpoint
+const m10Values = sorted.map((c) => c.summary.friction.length);
+
+// Metric 11: open_items count time-series (lightweight-charts)
+const m11Series = sorted.map((c) => ({
+  time: Math.floor(new Date(c.commit_date).getTime() / 1000),
+  value: c.summary.open_items.length,
+}));
+
+// Metric 12: learnings sum per checkpoint
+const m12Values = sorted.map((c) => c.learnings.repo + c.learnings.code + c.learnings.workflow);
+
+// Metric 13: scatter — x = turns.length, y = agent_percentage
+const m13Points = checkpoints.map((c) => ({ x: c.turns.length, y: c.agent_percentage }));
+---
+
+<!-- Section heading -->
+<div class="col-span-full flex items-center gap-3 pt-2">
+  <h2 class="font-label text-text-primary font-semibold text-base whitespace-nowrap">
+    Quality Signals
+  </h2>
+  <div class="flex-1 h-px bg-white/5"></div>
+</div>
+
+<!-- Metric 10: Friction Count -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Friction Count</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Number of friction points recorded in each checkpoint's summary.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: summary.friction.length</p>
+  <div style="position:relative; height:180px">
+    <canvas
+      id="metric-10"
+      data-labels={JSON.stringify(labels)}
+      data-values={JSON.stringify(m10Values)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 11: Open Items Over Time -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Open Items Over Time</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Count of unresolved open items per checkpoint, tracked chronologically.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: summary.open_items.length, commit_date</p>
+  <div
+    id="metric-11"
+    style="height:200px"
+    data-series={JSON.stringify(m11Series)}
+  >
+  </div>
+</div>
+
+<!-- Metric 12: Learnings per Checkpoint -->
+<div class="card-glass p-4">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Learnings per Checkpoint</h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Sum of repo, code, and workflow learnings captured per checkpoint.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">
+    Source: learnings.repo, learnings.code, learnings.workflow
+  </p>
+  <div style="position:relative; height:180px">
+    <canvas
+      id="metric-12"
+      data-labels={JSON.stringify(labels)}
+      data-values={JSON.stringify(m12Values)}
+    ></canvas>
+  </div>
+</div>
+
+<!-- Metric 13: Session Depth vs Agent Percentage (wide) -->
+<div class="card-glass p-4 md:col-span-2">
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">
+    Session Depth vs Agent Percentage
+  </h3>
+  <p class="font-label text-text-muted text-xs mb-1">
+    Each point is a checkpoint: x-axis shows API calls made, y-axis shows AI-authored percentage.
+  </p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: turns.length, agent_percentage</p>
+  <div style="position:relative; height:220px">
+    <canvas
+      id="metric-13"
+      data-points={JSON.stringify(m13Points)}
+    ></canvas>
+  </div>
+</div>
+
+<script>
+  import { createChart, LineSeries } from 'lightweight-charts';
+  import { Chart, registerables } from 'chart.js';
+  import { CHART_COLORS } from '../lib/theme-constants';
+  import { DARK_CHART_OPTIONS } from '../lib/utils/ai-metrics-utils';
+
+  Chart.register(...registerables);
+
+  // Metric 10 — bar chart (friction count)
+  const m10Canvas = document.getElementById('metric-10') as HTMLCanvasElement | null;
+  if (m10Canvas) {
+    const labels: string[] = JSON.parse(m10Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m10Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p10 = m10Canvas.parentElement;
+      if (p10) p10.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m10Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#ef4444', borderRadius: 3 }],
+        },
+        options: DARK_CHART_OPTIONS,
+      });
+    }
+  }
+
+  // Metric 11 — lightweight-charts line (open items)
+  const m11Container = document.getElementById('metric-11') as HTMLDivElement | null;
+  if (m11Container) {
+    const rawSeries: Array<{ time: number; value: number }> = JSON.parse(
+      m11Container.dataset.series ?? '[]',
+    );
+    if (!rawSeries.length) {
+      m11Container.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      const chart = createChart(m11Container, {
+        layout: { background: { color: 'transparent' }, textColor: CHART_COLORS.textColor },
+        grid: {
+          vertLines: { color: CHART_COLORS.gridLinesColor },
+          horzLines: { color: CHART_COLORS.gridLinesColor },
+        },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false, timeVisible: false },
+        handleScroll: false,
+        handleScale: false,
+        autoSize: true,
+      });
+      const series = chart.addSeries(LineSeries, {
+        color: '#f59e0b',
+        lineWidth: 2,
+        pointMarkersVisible: true,
+      });
+      const deduped11 = rawSeries.filter((p, i) => i === 0 || p.time !== rawSeries[i - 1].time);
+      series.setData(deduped11);
+      chart.timeScale().fitContent();
+    }
+  }
+
+  // Metric 12 — bar chart (learnings sum)
+  const m12Canvas = document.getElementById('metric-12') as HTMLCanvasElement | null;
+  if (m12Canvas) {
+    const labels: string[] = JSON.parse(m12Canvas.dataset.labels ?? '[]');
+    const values: number[] = JSON.parse(m12Canvas.dataset.values ?? '[]');
+    if (!values.length) {
+      const p12 = m12Canvas.parentElement;
+      if (p12) p12.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m12Canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: '#22c55e', borderRadius: 3 }],
+        },
+        options: DARK_CHART_OPTIONS,
+      });
+    }
+  }
+
+  // Metric 13 — scatter chart
+  const m13Canvas = document.getElementById('metric-13') as HTMLCanvasElement | null;
+  if (m13Canvas) {
+    const points: Array<{ x: number; y: number }> = JSON.parse(m13Canvas.dataset.points ?? '[]');
+    if (!points.length) {
+      const p13 = m13Canvas.parentElement;
+      if (p13) p13.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
+    } else {
+      new Chart(m13Canvas, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              data: points,
+              backgroundColor: '#00f5ff',
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            },
+          ],
+        },
+        options: {
+          ...DARK_CHART_OPTIONS,
+          plugins: {
+            ...DARK_CHART_OPTIONS.plugins,
+            tooltip: {
+              ...DARK_CHART_OPTIONS.plugins.tooltip,
+              callbacks: {
+                label: (ctx) => ` turns: ${ctx.parsed.x}, agent: ${ctx.parsed.y}%`,
+              },
+            },
+          },
+          scales: {
+            ...DARK_CHART_OPTIONS.scales,
+            x: { ...DARK_CHART_OPTIONS.scales.x, title: { display: true, text: 'API Calls (turns)', color: '#606070', font: { family: 'Inter', size: 10 } } },
+            y: { ...DARK_CHART_OPTIONS.scales.y, title: { display: true, text: 'Agent %', color: '#606070', font: { family: 'Inter', size: 10 } } },
+          },
+        },
+      });
+    }
+  }
+</script>
