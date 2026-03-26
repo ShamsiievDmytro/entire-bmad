@@ -1,0 +1,158 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "9103598e5336",
+  "session_id": "3d7af3ad-3f4d-4b42-8b7b-e24a1130f3e0",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T12:25:16.845719Z",
+  "branch": "main",
+  "checkpoints_count": 8,
+  "files_touched": [
+    ".gitignore",
+    "_bmad-output/implementation-artifacts/5-2-ai-metrics-dashboard-page.md",
+    "_bmad-output/implementation-artifacts/deferred-work.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "_bmad-output/planning-artifacts/prd.md",
+    "astro.config.mjs",
+    "eslint.config.js",
+    "package-lock.json",
+    "package.json",
+    "src/components/AiAttributionSection.astro",
+    "src/components/AiBehavioralSection.astro",
+    "src/components/AiQualitySection.astro",
+    "src/components/AiTemporalSection.astro",
+    "src/components/AiTokenSection.astro",
+    "src/layouts/AiMetricsLayout.astro",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/pages/ai-metrics.astro",
+    "vitest.config.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "517e7ac5923f",
+  "token_usage": {
+    "input_tokens": 83,
+    "cache_creation_tokens": 132349,
+    "cache_read_tokens": 6943603,
+    "output_tokens": 53866,
+    "api_call_count": 65
+  },
+  "session_metrics": {
+    "turn_count": 8
+  },
+  "summary": {
+    "intent": "Perform an adversarial code review of story 5-2 (AI Metrics Dashboard Page) using the bmad-code-review skill, then apply all identified fixes.",
+    "outcome": "Review completed with 3 parallel agents (Blind Hunter, Edge Case Hunter, Acceptance Auditor); 16 patches applied, 2 design decisions resolved, 7 items deferred, and story status advanced to 'done'.",
+    "learnings": {
+      "repo": [
+        "The bmad-code-review skill runs three parallel agents: Blind Hunter (adversarial, diff-only), Edge Case Hunter (boundary analysis with repo access), and Acceptance Auditor (spec compliance against ACs).",
+        "Story status lifecycle: review → done, tracked in _bmad-output/implementation-artifacts/sprint-status.yaml.",
+        "Deferred findings are logged to _bmad-output/implementation-artifacts/deferred-work.md.",
+        "Dev Notes in story spec files contain all utility function signatures, chart patterns, and anti-patterns that override default implementation choices.",
+        "Astro build-time frontmatter executes at build time, so runtime JSON schema drift (e.g. null prompt_txt) crashes the build, not just the UI."
+      ],
+      "code": [
+        {
+          "path": "src/pages/ai-metrics.astro",
+          "line": 14,
+          "end_line": 14,
+          "finding": "resolve('./src/data/...') resolves relative to process.cwd(), not the file; should use new URL('../data/...', import.meta.url) for build portability."
+        },
+        {
+          "path": "src/pages/ai-metrics.astro",
+          "line": 14,
+          "end_line": 14,
+          "finding": "JSON.parse(readFileSync(...)) has no try/catch; malformed cache file crashes the entire build with unhandled SyntaxError."
+        },
+        {
+          "path": "src/pages/ai-metrics.astro",
+          "line": 22,
+          "end_line": 22,
+          "finding": "Cache-missing UI renders in all modes, not guarded by import.meta.env.DEV as AC3 requires."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "line": 40,
+          "end_line": 44,
+          "finding": "classifyPromptType: whitespace-only strings (e.g. '   ') pass the empty-string guard and are misclassified as Free-form instead of Continuation."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "line": 57,
+          "end_line": 67,
+          "finding": "computeCheckpointCadenceMinutes: returns N values with index 0 always = 0; callers expecting N-1 deltas get a spurious zero bar. Fixed by slicing away index 0 in AiTemporalSection."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "line": 61,
+          "end_line": 62,
+          "finding": "computeCheckpointCadenceMinutes: invalid commit_date produces NaN via new Date(invalid).getTime(), which propagates unguarded into chart data arrays."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "line": 32,
+          "end_line": 38,
+          "finding": "computeRollingAverage: window \u003c= 0 causes division by zero returning NaN for all values; function is exported so external callers are at risk."
+        },
+        {
+          "path": "src/components/AiAttributionSection.astro",
+          "line": 27,
+          "end_line": 27,
+          "finding": "Metric 3 denominator guard Math.max(agent_lines, 1) silently distorts human modification rate when agent_lines === 0, producing nonsensical percentages. Fixed to return 0 for zero-agent-line checkpoints."
+        },
+        {
+          "path": "src/components/AiAttributionSection.astro",
+          "finding": "Metric 3/4 no-data fallback used style=\"...\" as a literal string attribute value instead of real CSS, making the fallback div invisible."
+        },
+        {
+          "path": "src/components/AiTokenSection.astro",
+          "line": 51,
+          "end_line": 51,
+          "finding": "DOUGHNUT_COLORS has only 6 entries; if more than 6 distinct model names exist, extra chart segments receive undefined backgroundColor and render transparent."
+        },
+        {
+          "path": "src/components/AiBehavioralSection.astro",
+          "line": 29,
+          "end_line": 29,
+          "finding": "classifyPromptType called with potential null/undefined prompt_txt; null.trim() throws TypeError crashing Astro build-time frontmatter."
+        },
+        {
+          "path": "src/layouts/AiMetricsLayout.astro",
+          "finding": "Only Inter 400 weight imported via @fontsource, but dashboard uses font-semibold (600) and font-medium (500) classes, causing browser to synthesize bold typography."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.test.ts",
+          "finding": "aggregateBmadCommands test computed expected array using the same runtime comparator as the implementation, making the assertion self-referentially vacuous; expected value should be a hardcoded literal."
+        }
+      ],
+      "workflow": [
+        "Blind Hunter agent without file-read access can produce false-positive 'stub' findings when given abbreviated file content in the prompt; always cross-check against files actually read.",
+        "Running three review agents in parallel (Blind Hunter, Edge Case Hunter, Acceptance Auditor) significantly increases finding coverage without context window bloat.",
+        "lightweight-charts requires strictly ascending unique Unix-second timestamps; any two checkpoints \u003c 1 second apart or with identical commit_date will crash setData() — deduplication must be applied before every setData() call.",
+        "The 'decision-needed' pattern (DN1, DN2) is effective for surfacing metric-semantic design choices that require product input before patching."
+      ]
+    },
+    "friction": [
+      "Blind Hunter flagged AiQualitySection, AiBehavioralSection, AiTokenSection, and AiTemporalSection as 'critical stubs' because it only received partial file content; required manual triage to dismiss ~4 false-positive critical findings.",
+      "AiTokenSection required multiple read-then-edit cycles (4+ reads) due to edit conflicts or stale context, slowing patch application.",
+      "AiQualitySection and AiTemporalSection similarly required intermediate reads before edits could succeed."
+    ],
+    "open_items": [
+      "AC3 compliance: cache-missing UI should be gated by import.meta.env.DEV; currently renders in production too (blocked by AC2 build guard but not explicitly enforced in code).",
+      "canvas elements have no explicit width/height HTML attributes, causing CLS flicker on initial layout pass before Chart.js resizes them.",
+      "cache.meta.checkpointCount is never validated against actual cache.checkpoints.length; stale meta count can contradict rendered chart data.",
+      "classifyFileLayer misclassifies paths under docs/components/ as 'components' instead of 'docs' due to substring-match ordering.",
+      "DARK_CHART_OPTIONS.legend.display hardcoded to false; callers that need legend must remember to override it — should be a factory function or the legend block should be omitted from the base config.",
+      "m3Values division guard (Math.max(agent_lines, 1)) semantics: now returns 0 for zero-agent-line checkpoints, but no tooltip or annotation flags this to the viewer.",
+      "Metric 19 single-checkpoint edge case: computeCheckpointCadenceMinutes returns [0] for a single checkpoint, but after stripping index 0 the chart shows empty with no 'single checkpoint — no cadence measurable' message."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T12:24:30.993714Z",
+    "agent_lines": 2615,
+    "human_added": 1139,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3754,
+    "agent_percentage": 69.65903036760788
+  }
+}

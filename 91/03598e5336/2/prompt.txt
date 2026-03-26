@@ -1,0 +1,458 @@
+/bmad-code-review
+
+---
+
+y
+
+---
+
+y
+
+---
+
+<task-notification>
+<task-id>a4a3c784ba056baa6</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a4a3c784ba056baa6.output</output-file>
+<status>completed</status>
+<summary>Agent "Blind Hunter adversarial review" completed</summary>
+<result>## Adversarial Review — Story 5-2: AI Metrics Dashboard Page
+
+---
+
+### CRITICAL
+
+---
+
+- **AiQualitySection.astro and AiBehavioralSection.astro reference undeclared variables**
+  - **Severity:** Critical
+  - **Category:** Runtime Error / Build Failure
+  - **Evidence:** `AiQualitySection.astro` uses `sorted`, `checkpoints`, and `c` in frontmatter computations (`m10Values`, `m11Series`, etc.) with no `import`, no `Props` interface, and no `const { checkpoints }` destructuring. `AiBehavioralSection.astro` references `sorted` and `checkpoints` without declaring them. `AiTemporalSection.astro` similarly references `sorted` and `checkpoints` without declaration. These files will fail to build.
+
+- **AiTokenSection.astro is a stub — its HTML and `<script>` block are entirely missing**
+  - **Severity:** Critical
+  - **Category:** Incomplete Implementation / Dead Code
+  - **Evidence:** The file ends immediately after frontmatter variable declarations (`m9Labels`, `m9Values`, `DOUGHNUT_COLORS`) and a comment block. Metrics 6–9 have no rendered HTML and no chart initialization. The page will render an empty section with no charts.
+
+- **AiQualitySection.astro, AiBehavioralSection.astro, AiTemporalSection.astro are all stubs**
+  - **Severity:** Critical
+  - **Category:** Incomplete Implementation
+  - **Evidence:** All three files contain only frontmatter variable declarations and HTML comment placeholders (e.g., `<!-- Metric 10: Friction Count -->`). No actual HTML is emitted, no `<canvas>` or chart container elements exist, no `<script>` blocks are present. Metrics 10–20 are entirely unimplemented.
+
+---
+
+### HIGH
+
+---
+
+- **`classifyPromptType` has an asymmetric empty-string check that is inconsistent with `.trim()` usage**
+  - **Severity:** High
+  - **Category:** Logic Bug
+  - **Evidence:** `if (promptTxt === '') return 'Continuation'` checks the raw string for empty, but the slash-command branch uses `promptTxt.trim().startsWith('/')`. A string of only whitespace (e.g., `'   '`) is not empty, passes the first guard, fails the slash check, and is classified as `'Free-form'` — but semantically it is empty and should be `'Continuation'`. The test suite does not cover this edge case.
+
+- **`computeCheckpointCadenceMinutes` sorting is not reflected in its return value relative to the input**
+  - **Severity:** High
+  - **Category:** API Contract Bug
+  - **Evidence:** The function sorts internally into `sorted`, then returns deltas indexed against `sorted`. However, callers in `AiTemporalSection.astro` pair the result with `cadenceLabels = sorted.map(...)` where `sorted` is the caller's own independently-sorted copy — this only works by coincidence if both sort identically. There is no documented contract that the output array aligns to the sorted order, not the input order, making this a hidden footgun for future callers.
+
+- **`computeRollingAverage` with `window=3` on `[10, 20, 30, 40]` — test expects `[10, 15, 20, 30]` but the correct value for index 2 is `20`, not `20`**
+  - **Severity:** High
+  - **Category:** Test Correctness (verify)
+  - **Evidence:** Index 2: `slice(0, 3) = [10, 20, 30]`, mean = 20. Index 3: `slice(1, 4) = [20, 30, 40]`, mean = 30. So the expected array `[10, 15, 20, 30]` is correct only if index 1 yields 15 (`[10,20]/2=15`) — that part is fine. However, index 2 yields `(10+20+30)/3 = 20` and index 3 yields `(20+30+40)/3 = 30`. The test assertion matches. This passes. **But** a separate edge: the function is never tested for `window <= 0`, which would produce `NaN` via `slice(i+1, i+1)` returning `[]` and dividing by 0. Division by zero returning `NaN` is silently swallowed.
+
+- **`src/pages/ai-metrics.astro` reads a file from `./src/data/` at build time with `resolve('./'...)` — path is relative to CWD, not the file**
+  - **Severity:** High
+  - **Category:** Build Portability / Path Resolution
+  - **Evidence:** `resolve('./src/data/checkpoints-cache.json')` resolves relative to `process.cwd()`, which is the project root only when Astro is invoked from the root. If the build is ever run from a different working directory, or inside a monorepo, `existsSync` will silently return `false` and the page renders the "Cache missing" state without any warning. The idiomatic Astro approach is `new URL('../data/checkpoints-cache.json', import.meta.url)`.
+
+- **`AiAttributionSection.astro` metric-3 and metric-4 "no data" fallback writes a literal `'...'` string as the `style` attribute**
+  - **Severity:** High
+  - **Category:** UI Bug / Template Error
+  - **Evidence:** `m3Canvas.parentElement!.innerHTML = '<div style="...">No data available</div>'` — `style="..."` is not valid CSS. The fallback div will render with no styling, potentially invisible against a dark background or collapsing to zero height.
+
+---
+
+### MEDIUM
+
+---
+
+- **`aggregateBmadCommands` test assertion is self-referentially vacuous**
+  - **Severity:** Medium
+  - **Category:** Test Quality
+  - **Evidence:** The "merges overlapping commands" test computes the expected array inline and then sorts it with the same comparator as the implementation: `.sort((a, b) => b.count - a.count)`. The test is asserting that the result equals itself-sorted, which trivially passes regardless of whether the implementation is correct. The expected value should be a hardcoded literal `[{ command: '/dev-story', count: 5 }, ...]`.
+
+- **`m3Values` division guard uses `Math.max(c.agent_lines, 1)` — silently distorts zero-agent-line checkpoints**
+  - **Severity:** Medium
+  - **Category:** Data Integrity / Silent Distortion
+  - **Evidence:** When `agent_lines === 0` and `human_modified > 0`, the rate is computed as `human_modified / 1 * 100`, which can exceed 100% and is semantically meaningless. The guard prevents a divide-by-zero but produces misleading chart data. No tooltip or annotation flags this anomaly to the viewer.
+
+- **`DARK_CHART_OPTIONS` `legend.display` is hardcoded to `false`, but several charts override it inline — the base constant is misleading**
+  - **Severity:** Medium
+  - **Category:** Maintainability / Misleading Abstraction
+  - **Evidence:** `AiAttributionSection.astro` metric-4 spreads `DARK_CHART_OPTIONS` and then overrides `plugins.legend.display` to `true`. The base constant exists for DRY reuse, but callers must remember to override `legend` each time they need it visible. The `labels` sub-object inside `legend` (with `color` and `font`) is wasted in the base config when `display: false`. This should be a factory function or the legend block should be omitted from the base.
+
+- **`AiAttributionSection.astro` script block uses a non-null assertion `m3Canvas.parentElement!` without guarding `parentElement` existence**
+  - **Severity:** Medium
+  - **Category:** Runtime Error Risk
+  - **Evidence:** If the canvas is ever rendered as a root element (e.g., detached fragment during SSR hydration edge cases), `parentElement` is `null` and the `!` assertion will throw a `TypeError` at runtime. A guard `if (m3Canvas.parentElement)` costs nothing.
+
+- **`AiMetricsLayout.astro` imports Inter only in the 400 weight but the body uses `font-label` which may expect additional weights**
+  - **Severity:** Medium
+  - **Category:** Visual Regression / Missing Asset
+  - **Evidence:** `@fontsource/inter/400.css` is the only Inter import, but the dashboard uses `font-semibold` (600) and `font-medium` (500) utility classes on Inter-based text. JetBrains Mono is imported at 400, 500, and 600. Inter is not. Missing weights will cause browsers to synthesize bold, resulting in degraded typography.
+
+- **`m5Value` (Zero-Human-Touch Lines) is computed from all `checkpoints` but uses an unfiltered `.reduce` starting from all data — accumulation is correct but the stat is misleadingly named**
+  - **Severity:** Medium
+  - **Category:** Data Semantics
+  - **Evidence:** The stat label says "cumulative agent lines in checkpoints with no human edits." `m5Value` correctly filters then reduces. However, if a checkpoint has `human_added=0` but `human_removed > 0`, it is counted as "zero-human-touch" — removal is still a human action. The filter `human_removed === 0` is included, so this is technically fine, but the metric name "Zero-Human-Touch" is only valid if all three fields are zero, which the code does enforce. The description text "lines untouched by humans" is accurate. No bug, but reviewers should verify the intent covers `human_removed`.
+
+---
+
+### LOW
+
+---
+
+- **Typo: `dsStyeld` in `AiAttributionSection.astro` script block**
+  - **Severity:** Low
+  - **Category:** Code Quality / Naming
+  - **Evidence:** `const dsStyeld = datasets.map(...)` — `dsStyeld` is a misspelling of `dsStyled`. Does not affect behavior but signals low code quality.
+
+- **`m1Series` uses Unix timestamp (seconds) for `time`, which is correct for lightweight-charts, but metric-18 in `AiTemporalSection.astro` uses milliseconds (`new Date(...).getTime()`) as `x` in a scatter dataset — this is inconsistent and will break lightweight-charts if that series is ever migrated**
+  - **Severity:** Low
+  - **Category:** Inconsistency / Future Bug Risk
+  - **Evidence:** `m18Points` assigns `x: new Date(c.commit_date).getTime()` (milliseconds). `m1Series` assigns `time: Math.floor(...getTime() / 1000)` (seconds). Since metric-18 is a stub/comment, it currently does nothing, but the prepared data is already wrong for lightweight-charts usage.
+
+- **`AiMetricsLayout.astro` duplicates background color in both `style` attribute and Tailwind class**
+  - **Severity:** Low
+  - **Category:** Redundancy
+  - **Evidence:** `<html lang="en" style="background-color: #0a0a0f" class="bg-bg-base">` — if `bg-bg-base` maps to `#0a0a0f`, these are redundant. If they ever diverge (design token update), the inline style wins over the utility class, creating a silent visual discrepancy.
+
+- **`cache.meta.generatedAt` is rendered via `new Date(...).toLocaleString()` with no locale or timezone option**
+  - **Severity:** Low
+  - **Category:** Internationalization
+  - **Evidence:** `toLocaleString()` with no arguments uses the browser's locale and timezone, which means the rendered timestamp will differ between users. For a metrics dashboard that may be shared or screenshotted for reporting, this is inconsistent. A fixed locale and timezone (e.g., `'en-US', { timeZone: 'UTC' }`) should be used.
+
+- **No `<meta name="description">` or `<link rel="icon">` in `AiMetricsLayout.astro`**
+  - **Severity:** Low
+  - **Category:** Completeness / SEO / UX
+  - **Evidence:** The `<head>` contains only `charset`, `viewport`, and `title`. No favicon link, no description meta. Minor for an internal dashboard but produces a browser console warning and a generic favicon.</result>
+<usage><total_tokens>18676</total_tokens><tool_uses>1</tool_uses><duration_ms>71120</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a4a3c784ba056baa6.output
+
+---
+
+<task-notification>
+<task-id>a03ffcef82a03497d</task-id>
+<tool-use-id>toolu_017TtJc6MXN8ZoutyRjGfR92</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a03ffcef82a03497d.output</output-file>
+<status>completed</status>
+<summary>Agent "Acceptance Auditor spec review" completed</summary>
+<result>I now have all the evidence needed for a thorough audit. Here are the findings:
+
+---
+
+## Acceptance Audit Findings
+
+- **AC3: Dev mode "cache missing" message is shown in all modes, not just dev — the message is rendered at runtime regardless of `import.meta.env.DEV`.**
+  AC3 requires the clear "cache missing" message specifically in dev mode; the page serves the same message in production builds too. Since the build guard (AC2) throws before a production build can complete, this is an inconsistency rather than a broken user experience, but the conditional `import.meta.env.DEV` guard specified by the AC is absent. Evidence: `ai-metrics.astro` line 22 — `cache === null ? (...)` with no dev-mode guard wrapping it.
+
+- **AC5/AC6/AC7: Column breakpoints do not match the spec's pixel thresholds.**
+  The spec requires ≥1024px → 3 cols, 768–1023px → 2 cols, <768px → 1 col, which maps to Tailwind's `md` (768px) and `lg` (1024px) prefixes. The grid class `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` is correct by default Tailwind breakpoints. This passes — no finding.
+
+- **AC10: Metric 2 (Pure-AI Commit Rate) is missing a source field label in its card body.**
+  Every chart card must include a source field label (FR33). The stat card for Metric 2 has the source line (`<p … Source: agent_percentage</p>`, AiAttributionSection.astro line 79) placed *before* the empty-state conditional, meaning the source text is always visible even in the no-data state — this is a minor ordering issue but the label itself is present. No AC10 violation.
+
+- **AC15 (FR12): Metric 3 human modification rate formula deviates from the spec.**
+  The spec defines human modification rate as `human_modified / agent_lines * 100`. The code applies `Math.max(agent_lines, 1)` as a denominator guard. While this prevents a divide-by-zero, it silently distorts the percentage (a checkpoint with 0 agent lines but non-zero human_modified will show a nonzero rate against a phantom denominator of 1 instead of being treated as undefined/empty). The spec does not prescribe this guard; it changes the meaning of the metric. Evidence: `AiAttributionSection.astro` line 27.
+
+- **AC27 (FR23): Metric 15 color-to-label mapping is order-dependent and will produce wrong colors when the `promptCounts` object key order changes.**
+  The spec assigns colors `['#00f5ff', '#8b5cf6', '#a0a0b0']` to the three categories but the diff states these map to `Object.keys(promptCounts)` = `['Slash Command', 'Free-form', 'Continuation']`. The hardcoded color array positionally assumes that order. The `promptCounts` object is declared with a fixed key order (`{ 'Slash Command': 0, 'Free-form': 0, Continuation: 0 }`), so in practice the order is stable in V8. However, the spec intent is Slash Command → cyan, Free-form → purple, Continuation → grey. The array `['#00f5ff', '#8b5cf6', '#a0a0b0']` maps cyan to index 0 (Slash Command), purple to index 1 (Free-form), grey to index 2 (Continuation). This is consistent with spec intent. No AC violation — informational only.
+
+- **AC31 (FR27): Metric 19 cadence label count and value count are mismatched — the first cadence value is always 0 (placeholder for the first checkpoint) but `cadenceLabels` has N entries while `cadenceValues` also has N entries, meaning the chart shows a spurious 0-minute bar for the first checkpoint.**
+  FR27 specifies "time delta between consecutive commit_date values", which is defined only for N−1 intervals. `computeCheckpointCadenceMinutes` returns N values with index 0 always being `0` (line 62: `if (i === 0) return 0`), and `cadenceLabels` is built from all N sorted checkpoints. This renders a misleading zero bar at the start. The spec expects N−1 bars. Evidence: `ai-metrics-utils.ts` lines 61–62; `AiTemporalSection.astro` lines 25–26.
+
+- **AC19 (FR15): Metric 7 cache leverage score multiplies by 100 on the value, producing a percentage (0–100), but the chart has no y-axis unit label and the spec (FR15) calls it a "score" not a percentage.**
+  This is a minor presentation deviation; the scale logic `Math.round((c.tokens.cache_read / total) * 1000) / 10` yields values 0–100 (percentage). The spec says "cache leverage score (tokens.cache_read / total_tokens)" without specifying whether to express it as a ratio or percentage. Low severity but worth flagging.
+
+- **AC26 (FR22): Metric 14 passes unsorted `checkpoints` (not `sorted`) to `aggregateBmadCommands`, but this function sorts internally — this is fine. However, the horizontal bar uses `lg:col-span-2` in the diff summary but the actual template at line 64 of `AiBehavioralSection.astro` uses `lg:col-span-2` — confirmed correct. No finding.**
+
+- **Dev Note constraint violated: `AiTemporalSection.astro` imports `CHART_COLORS` from `'../lib/theme-constants'`.**
+  The dev notes do not explicitly ban `theme-constants.ts`, but the forbidden imports list (`connection-manager.ts`, `market-data-service.ts`, any store) does not include it. This is not a violation of the stated constraints. No finding.
+
+- **Dev Note constraint violated: `DARK_CHART_OPTIONS` has no `type` annotation for the `scales` property — the `scales` object is missing `type: 'linear'` on the x-axis for Metric 18's scatter chart.**
+  AC18/AC30: Metric 18 uses a scatter chart with a linear x-axis (epoch ms). The `DARK_CHART_OPTIONS.scales.x` object does not set `type: 'linear'`; the scatter chart overrides ticks with a callback but never explicitly sets `type: 'linear'` on the x scale. Chart.js defaults scatter x-axes to `'linear'`, so this is likely harmless in practice but is an implicit assumption. Low severity.
+
+- **AC3: The "cache missing" message says "Run the fetch script to populate it" rather than explicitly instructing `npm run fetch-checkpoints`.**
+  The `<code>` element on line 29 of `ai-metrics.astro` *does* show `npm run fetch-checkpoints`, so AC3 is satisfied. No finding.
+
+---
+
+### Summary of Real Findings
+
+1. **AC3 — No dev-mode guard on the cache-missing UI.** The missing-cache message renders in production too; AC3 specifically scopes it to dev mode. The build guard (AC2) in `astro.config.mjs` prevents a production build from succeeding without the cache, so in production this branch is unreachable — but the code does not enforce that relationship explicitly and the AC requirement for a dev-only guard is not met. (`ai-metrics.astro` line 22.)
+
+2. **AC15 / FR12 — Metric 3 denominator silently distorted.** `Math.max(agent_lines, 1)` changes the metric meaning for zero-agent-line checkpoints instead of treating them as no-data. (`AiAttributionSection.astro` line 27.)
+
+3. **AC31 / FR27 — Metric 19 cadence bar chart has a spurious first bar of 0 minutes.** `computeCheckpointCadenceMinutes` returns N values (index 0 always = 0) paired with N labels, rendering a meaningless zero-delta bar for the first checkpoint. The spec defines cadence as N−1 deltas between consecutive checkpoints. (`ai-metrics-utils.ts` lines 61–62; `AiTemporalSection.astro` lines 25–26.)</result>
+<usage><total_tokens>36020</total_tokens><tool_uses>13</tool_uses><duration_ms>68599</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a03ffcef82a03497d.output
+
+---
+
+<task-notification>
+<task-id>a40b513b14402004a</task-id>
+<tool-use-id>toolu_01Ju71Q13NfiQV4fYwtCpgkb</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a40b513b14402004a.output</output-file>
+<status>completed</status>
+<summary>Agent "Edge Case Hunter review" completed</summary>
+<result>I now have all the information needed to perform the exhaustive path analysis. Let me trace every branching path and boundary condition across all files.
+
+Here are the findings from the exhaustive edge case analysis:
+
+```json
+[
+  {
+    "location": "src/pages/ai-metrics.astro:14",
+    "trigger_condition": "checkpoints-cache.json exists but contains malformed/non-object JSON",
+    "guard_snippet": "try { cache = JSON.parse(readFileSync(cachePath, 'utf-8')) as CheckpointsCache; } catch { cache = null; }",
+    "potential_consequence": "Unhandled SyntaxError crashes the entire build/SSR render"
+  },
+  {
+    "location": "src/pages/ai-metrics.astro:14",
+    "trigger_condition": "JSON parses successfully but cache.checkpoints is undefined or not an array",
+    "guard_snippet": "const checkpoints = Array.isArray(cache?.checkpoints) ? cache.checkpoints : [];",
+    "potential_consequence": "cache?.checkpoints ?? [] silently shows empty dashboard rather than surfacing data corruption"
+  },
+  {
+    "location": "src/pages/ai-metrics.astro:51",
+    "trigger_condition": "cache.meta.generatedAt is an invalid date string",
+    "guard_snippet": "const d = new Date(cache.meta.generatedAt); d.toLocaleString() // renders 'Invalid Date'",
+    "potential_consequence": "UI displays 'Invalid Date' with no error messaging for the user"
+  },
+  {
+    "location": "src/pages/ai-metrics.astro:46",
+    "trigger_condition": "cache.meta.checkpointCount differs from cache.checkpoints.length",
+    "guard_snippet": "No guard — checkpointCount is rendered as-is from meta, no assertion against actual array length",
+    "potential_consequence": "Header shows a stale or incorrect checkpoint count that contradicts rendered chart data"
+  },
+  {
+    "location": "src/components/AiAttributionSection.astro:16-18 (script Metric 1)",
+    "trigger_condition": "Two checkpoints share identical commit_date, producing duplicate integer Unix timestamps",
+    "guard_snippet": "const deduped = rawSeries.filter((p,i,a) => i===0 || p.time !== a[i-1].time); series.setData(deduped);",
+    "potential_consequence": "lightweight-charts throws 'Duplicate time value' runtime error, chart never renders"
+  },
+  {
+    "location": "src/components/AiTokenSection.astro (Metric 7 m7Series) + AiQualitySection.astro (Metric 11) + AiTemporalSection.astro (Metric 20)",
+    "trigger_condition": "Two checkpoints share identical commit_date, producing duplicate integer Unix timestamps",
+    "guard_snippet": "Deduplicate or merge points before series.setData(); lightweight-charts requires strictly ascending unique times",
+    "potential_consequence": "All three lightweight-charts instances throw runtime errors; charts fail silently in try-less script"
+  },
+  {
+    "location": "src/lib/utils/ai-metrics-utils.ts:46-55 (classifyFileLayer)",
+    "trigger_condition": "Path like 'src/lib/utils/components-helpers.ts' contains 'components/' as a substring",
+    "guard_snippet": "No — 'components/' would NOT match since it needs a trailing slash; but 'src/components-v2/Foo.ts' WOULD match 'components/'",
+    "potential_consequence": "Paths where a directory name starts with a layer keyword followed by a non-slash char are mis-classified"
+  },
+  {
+    "location": "src/lib/utils/ai-metrics-utils.ts:46-55 (classifyFileLayer)",
+    "trigger_condition": "Path is empty string ''",
+    "guard_snippet": "Returns 'other' — no crash, but empty-string paths in files_touched would silently be bucketed as other",
+    "potential_consequence": "Low — silent misclassification, no error"
+  },
+  {
+    "location": "src/lib/utils/ai-metrics-utils.ts:57-67 (computeCheckpointCadenceMinutes)",
+    "trigger_condition": "commit_date is not a parseable date string; new Date(invalid).getTime() returns NaN",
+    "guard_snippet": "No guard — NaN propagates through subtraction, Math.round(NaN/60000) === NaN passed to chart data",
+    "potential_consequence": "Chart.js renders missing bars for NaN values; lightweight-charts may throw on NaN time values"
+  },
+  {
+    "location": "src/components/AiTemporalSection.astro:24-25 (Metric 19 cadenceLabels vs cadenceValues)",
+    "trigger_condition": "checkpoints input has duplicates by date; computeCheckpointCadenceMinutes sorts internally on a copy, sorted sorts a different copy",
+    "guard_snippet": "Both use the same sort key so order is deterministic — however if commit_dates are equal, sort is unstable and relative order may differ between the two sort passes",
+    "potential_consequence": "cadenceLabels[i] and cadenceValues[i] may refer to different checkpoints when timestamps are equal"
+  },
+  {
+    "location": "src/components/AiTemporalSection.astro:16-21 (Metric 18 m18Points)",
+    "trigger_condition": "commit_date is not a parseable date string; new Date(invalid).getTime() returns NaN",
+    "guard_snippet": "No guard — x: NaN passed to Chart.js scatter dataset",
+    "potential_consequence": "Chart.js silently drops points with NaN x-values; tooltip callback calls new Date(NaN).toLocaleDateString() rendering 'Invalid Date'"
+  },
+  {
+    "location": "src/components/AiAttributionSection.astro:27 (Metric 3 m3Values)",
+    "trigger_condition": "c.agent_lines is 0, Math.max(c.agent_lines, 1) guards division — handled correctly",
+    "guard_snippet": "Already guarded — no finding",
+    "potential_consequence": "N/A — handled"
+  },
+  {
+    "location": "src/components/AiBehavioralSection.astro:26-31 (Metric 15 promptCounts)",
+    "trigger_condition": "turn.prompt_txt is null or undefined (not typed as such, but runtime JSON may have it)",
+    "guard_snippet": "classifyPromptType(turn.prompt_txt) — if prompt_txt is null, null === '' is false, null.trim() throws TypeError",
+    "potential_consequence": "TypeError crashes the Astro build-time frontmatter execution for this component"
+  },
+  {
+    "location": "src/components/AiTokenSection.astro:51 (Metric 9 DOUGHNUT_COLORS)",
+    "trigger_condition": "modelMap has more than 6 distinct model names",
+    "guard_snippet": "DOUGHNUT_COLORS.slice(0, m9Labels.length) — when length > 6, slice returns only 6 colors but data has more segments",
+    "potential_consequence": "Chart.js renders extra doughnut segments with undefined backgroundColor, shown as transparent/grey"
+  },
+  {
+    "location": "src/components/AiBehavioralSection.astro (Metric 14 m14Labels/m14Values)",
+    "trigger_condition": "bmad_commands Record has a key that is an empty string ''",
+    "guard_snippet": "No guard — empty string key propagates to chart label array, displayed as blank label in horizontal bar",
+    "potential_consequence": "Chart renders a bar with an empty label, potentially confusing or overlapping with axis"
+  },
+  {
+    "location": "src/components/AiBehavioralSection.astro:46-49 (Metric 16 m16Datasets)",
+    "trigger_condition": "files_touched contains empty string or path with no directory separator",
+    "guard_snippet": "classifyFileLayer('') returns 'other' — handled, but silently; no indication of bad data",
+    "potential_consequence": "Low — silent misclassification into 'other' bucket"
+  },
+  {
+    "location": "src/components/AiAttributionSection.astro:12 + all section components",
+    "trigger_condition": "checkpoint_id is shorter than 8 characters",
+    "guard_snippet": "c.checkpoint_id.slice(0, 8) — String.prototype.slice is safe on short strings, returns full string",
+    "potential_consequence": "Low — label is just shorter than expected, no error"
+  },
+  {
+    "location": "src/components/AiTemporalSection.astro:30-33 (Metric 20 m20Series)",
+    "trigger_condition": "Two checkpoints share identical commit_date yielding duplicate integer Unix second timestamps",
+    "guard_snippet": "Deduplicate m20Series by time before setData; lightweight-charts requires strictly ascending unique times",
+    "potential_consequence": "lightweight-charts throws runtime error; rolling average line chart never renders"
+  },
+  {
+    "location": "src/components/AiQualitySection.astro (Metric 11 m11Series) + AiAttributionSection.astro (Metric 1 m1Series)",
+    "trigger_condition": "commit_date string is valid ISO but sub-second difference rounds to same Unix second integer",
+    "guard_snippet": "Math.floor(ms/1000) collapses timestamps < 1 second apart to same integer; no deduplication present",
+    "potential_consequence": "lightweight-charts throws 'Duplicate time value' for high-frequency commits in same second"
+  },
+  {
+    "location": "src/components/AiTemporalSection.astro (script Metric 19)",
+    "trigger_condition": "values array contains exactly one element (single checkpoint); cadenceValues = [0]",
+    "guard_snippet": "Chart renders one bar with value 0 — visually misleading as 0-min cadence for a single-checkpoint dataset",
+    "potential_consequence": "Low — not a crash but semantically misleading; no 'single checkpoint' label differentiation"
+  },
+  {
+    "location": "src/lib/utils/ai-metrics-utils.ts:32-38 (computeRollingAverage)",
+    "trigger_condition": "window parameter is 0 or negative; slice(max(0, i+1), i+1) produces empty slice",
+    "guard_snippet": "slice.length would be 0, division by 0 yields NaN/Infinity propagated to all output values",
+    "potential_consequence": "All rolling average values become NaN; lightweight-charts line chart fails or renders empty"
+  },
+  {
+    "location": "src/components/AiBehavioralSection.astro:29 (Metric 15)",
+    "trigger_condition": "classifyPromptType called with whitespace-only string e.g. '   '",
+    "guard_snippet": "'   ' !== '' so Continuation branch skipped; '   '.trim().startsWith('/') is false → classified as Free-form",
+    "potential_consequence": "Whitespace-only prompt_txt strings counted as Free-form rather than Continuation — likely misclassification"
+  }
+]
+```
+
+---
+
+Here is the structured Markdown report of findings:
+
+---
+
+## Edge Case Hunter Findings — Story 5-2: AI Metrics Dashboard Page
+
+### 1. Malformed JSON cache crashes build/SSR render
+**Severity: Critical**
+**Location:** `src/pages/ai-metrics.astro:14`
+`JSON.parse(readFileSync(...))` has no try/catch. If `checkpoints-cache.json` exists but contains malformed JSON (truncated write, encoding error), a `SyntaxError` is thrown and propagates unhandled, crashing the entire build or SSR render. The `existsSync` guard only checks presence, not content validity.
+
+---
+
+### 2. Duplicate Unix-second timestamps crash all lightweight-charts instances
+**Severity: Critical**
+**Location:** `AiAttributionSection.astro` (Metric 1), `AiTokenSection.astro` (Metric 7), `AiQualitySection.astro` (Metric 11), `AiTemporalSection.astro` (Metrics 18, 20)
+`Math.floor(new Date(c.commit_date).getTime() / 1000)` collapses any two checkpoints less than 1 second apart — or sharing identical `commit_date` strings — to the same integer. lightweight-charts requires strictly ascending unique times and throws a runtime error on `series.setData()`. No deduplication or merge step exists before any of the five `setData()` calls. The scripts run outside try/catch, so the error surfaces as an uncaught exception that prevents the chart from mounting.
+
+---
+
+### 3. Unstable sort causes cadenceLabels/cadenceValues index mismatch
+**Severity: High**
+**Location:** `src/components/AiTemporalSection.astro:24-25`
+`computeCheckpointCadenceMinutes(checkpoints)` sorts an internal copy of `checkpoints`. `cadenceLabels` is derived from a separately sorted `sorted` array. Both use the same comparator, but JavaScript's `Array.prototype.sort` is not guaranteed to be stable for equal keys across all engines, and the two arrays are distinct objects sorted independently. When any two checkpoints share the same `commit_date`, the relative order may differ between the two sort passes, causing `cadenceLabels[i]` to display the ID of a different checkpoint than `cadenceValues[i]` represents.
+
+---
+
+### 4. `null`/`undefined` `prompt_txt` causes TypeError during build
+**Severity: High**
+**Location:** `src/components/AiBehavioralSection.astro:29`
+`classifyPromptType(turn.prompt_txt)` checks `promptTxt === ''` first, then calls `promptTxt.trim()`. If a turn in the runtime JSON has `prompt_txt: null` (not expressible in the TypeScript type but possible from a script bug or schema drift), the strict equality check passes without matching, then `.trim()` throws `TypeError: Cannot read properties of null`. This executes in Astro's build-time frontmatter, crashing the component render.
+
+---
+
+### 5. More than 6 unique models leaves doughnut segments with no color
+**Severity: High**
+**Location:** `src/components/AiTokenSection.astro:51`, Metric 9
+`DOUGHNUT_COLORS` has exactly 6 entries. `DOUGHNUT_COLORS.slice(0, m9Labels.length)` silently produces fewer colors than data segments when more than 6 distinct model names appear. Chart.js receives `undefined` for the extra `backgroundColor` entries and renders those segments as transparent or a default grey, with no fallback or error.
+
+---
+
+### 6. `NaN` timestamps from invalid `commit_date` propagate unguarded
+**Severity: High**
+**Location:** `src/lib/utils/ai-metrics-utils.ts:59,63,64` (`computeCheckpointCadenceMinutes`); `AiTemporalSection.astro:17` (Metric 18 `m18Points`)
+`new Date(invalid_string).getTime()` returns `NaN`. In `computeCheckpointCadenceMinutes`, `NaN - NaN = NaN`, and `Math.round(NaN / 60000) = NaN` flows into chart data arrays. In Metric 18, `x: NaN` is passed as a scatter point; Chart.js silently drops it but the tooltip callback then calls `new Date(NaN).toLocaleDateString()`, which renders `"Invalid Date"` on hover. No guard validates `commit_date` parseability anywhere in the pipeline.
+
+---
+
+### 7. `cache.meta.checkpointCount` is never validated against actual array length
+**Severity: Medium**
+**Location:** `src/pages/ai-metrics.astro:46`
+`cache.meta.checkpointCount` is written by the fetch script at generation time. If the cache is partially regenerated, manually edited, or the fetch script has an off-by-one, `checkpointCount` may not equal `cache.checkpoints.length`. The dashboard header displays the stale meta value while all charts are computed from the actual array, creating a visible inconsistency with no reconciliation or assertion.
+
+---
+
+### 8. `cache.meta.generatedAt` invalid date string renders "Invalid Date" in UI
+**Severity: Medium**
+**Location:** `src/pages/ai-metrics.astro:51`
+`new Date(cache.meta.generatedAt).toLocaleString()` is called with no validity check. If `generatedAt` is missing, empty, or a non-date string, the expression renders `"Invalid Date"` directly in the page header with no fallback display or error boundary.
+
+---
+
+### 9. `classifyFileLayer` misclassifies paths with layer-name prefix in directory segment
+**Severity: Medium**
+**Location:** `src/lib/utils/ai-metrics-utils.ts:49-52`
+`filePath.includes('components/')` matches any occurrence of the substring `components/` anywhere in the path, including nested or prefixed directory names like `src/ui-components/Foo.ts` (contains `components/`? No — but `src/extra-components/Foo.ts` does). More concretely, a path like `src/components-old/Foo.ts` does NOT match (no trailing slash), but `src/extra/components/Foo.ts` correctly matches. The actual gap: a path segment that begins with a layer keyword but has no leading slash — e.g., a file at exactly `components-utils/foo.ts` — does not match, so the check is narrower than it appears. Conversely, a path like `docs/components/Foo.ts` matches `'components/'` before reaching `'docs/'`, classifying it as `components` instead of `docs`. Layer checks are ordered with `components` first, but `docs/` is checked last — any path under `docs/components/` will always be misclassified as `components`.
+
+---
+
+### 10. `computeRollingAverage` with `window <= 0` produces `NaN` for all values
+**Severity: Medium**
+**Location:** `src/lib/utils/ai-metrics-utils.ts:32-38`
+If `window` is `0` or negative, `Math.max(0, i - 0 + 1) = i + 1`, so `slice(i+1, i+1)` is empty (length 0). Division by 0 yields `NaN` for every element. The function is only called with the hardcoded literal `3` in `AiTemporalSection.astro`, so this is unreachable today, but the function has no guard and is exported for external use.
+
+---
+
+### 11. Whitespace-only `prompt_txt` strings misclassified as Free-form
+**Severity: Low**
+**Location:** `src/lib/utils/ai-metrics-utils.ts:40-44`
+A `prompt_txt` of `'   '` (whitespace only) is not `===  ''`, so the `Continuation` branch is skipped. `'   '.trim().startsWith('/')` is false, so it falls through to `Free-form`. Whitespace-only strings are semantically empty continuations and should likely be classified as `Continuation`, matching the intent of the empty-string check.
+
+---
+
+### 12. Metric 19 single-checkpoint dataset displays a misleading zero bar
+**Severity: Low**
+**Location:** `src/components/AiTemporalSection.astro` (Metric 19 script)
+`computeCheckpointCadenceMinutes` returns `[0]` for a single checkpoint. The chart renders a bar of height 0 with no explanation. There is no "single checkpoint — no cadence measurable" empty state distinct from the general "No data available" path (which requires `values.length === 0`). A user may interpret the 0-minute bar as a data error.
+
+---
+
+### 13. Canvas `<canvas>` elements have no explicit `width`/`height` attributes
+**Severity: Low**
+**Location:** All five section components — every `<canvas>` element
+`<canvas>` elements rely entirely on the parent `<div style="position:relative; height:Npx">` for sizing. Without explicit `width` and `height` HTML attributes or CSS `width: 100%`, the browser assigns the default 300×150 intrinsic size before Chart.js resizes the canvas. With `responsive: true` and `maintainAspectRatio: false`, Chart.js does resize on mount, but the initial layout pass uses the default intrinsic dimensions, causing Cumulative Layout Shift (CLS) and potential flicker on slower connections.</result>
+<usage><total_tokens>37325</total_tokens><tool_uses>12</tool_uses><duration_ms>123250</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a40b513b14402004a.output
+
+---
+
+Show no-data / 0
+Strip the first zero bar
+
+---
+
+0
