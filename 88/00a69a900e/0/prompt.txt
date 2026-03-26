@@ -1,0 +1,8 @@
+<task-notification>
+<task-id>bjjbgz94z</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/bjjbgz94z.output</output-file>
+<status>killed</status>
+<summary>Background command "Start Astro dev server" was stopped</summary>
+</task-notification>
+Read the output file to retrieve the result: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/bjjbgz94z.output
