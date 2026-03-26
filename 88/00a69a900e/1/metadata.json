@@ -1,0 +1,127 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "8800a69a900e",
+  "session_id": "4a8198a6-6041-4bd5-8602-ec0fcac22e82",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T17:24:16.53683Z",
+  "branch": "main",
+  "checkpoints_count": 10,
+  "files_touched": [
+    ".playwright-mcp/console-2026-03-26T12-19-51-441Z.log",
+    ".playwright-mcp/console-2026-03-26T12-35-55-005Z.log",
+    ".playwright-mcp/console-2026-03-26T12-44-38-314Z.log",
+    ".playwright-mcp/console-2026-03-26T12-46-17-610Z.log",
+    ".playwright-mcp/console-2026-03-26T12-54-01-944Z.log",
+    ".playwright-mcp/console-2026-03-26T13-05-23-615Z.log",
+    ".playwright-mcp/console-2026-03-26T13-17-39-513Z.log",
+    ".playwright-mcp/console-2026-03-26T13-18-10-539Z.log",
+    ".playwright-mcp/element-2026-03-26T12-47-09-804Z.png",
+    ".playwright-mcp/element-2026-03-26T12-49-54-741Z.png",
+    ".playwright-mcp/element-2026-03-26T12-49-55-146Z.png",
+    ".playwright-mcp/element-2026-03-26T12-50-00-597Z.png",
+    ".playwright-mcp/element-2026-03-26T12-50-01-377Z.png",
+    ".playwright-mcp/element-2026-03-26T12-54-08-493Z.png",
+    ".playwright-mcp/element-2026-03-26T12-54-08-765Z.png",
+    ".playwright-mcp/element-2026-03-26T13-05-45-863Z.png",
+    ".playwright-mcp/element-2026-03-26T13-05-46-443Z.png",
+    ".playwright-mcp/element-2026-03-26T13-05-52-109Z.png",
+    ".playwright-mcp/element-2026-03-26T13-05-52-604Z.png",
+    ".playwright-mcp/element-2026-03-26T13-43-12-927Z.png",
+    ".playwright-mcp/element-2026-03-26T13-45-01-044Z.png",
+    ".playwright-mcp/element-2026-03-26T13-45-01-361Z.png",
+    ".playwright-mcp/element-2026-03-26T13-50-27-794Z.png",
+    "ai-metrics-final-v2.png",
+    "ai-metrics-final.png",
+    "ai-metrics-fixed.png",
+    "ai-metrics-real-data.png",
+    "package-lock.json",
+    "package.json",
+    "scripts/fetch-checkpoints.test.ts",
+    "scripts/fetch-checkpoints.ts",
+    "single-checkpoint.png",
+    "src/components/AiAttributionSection.astro",
+    "src/components/AiBehavioralSection.astro",
+    "src/components/AiQualitySection.astro",
+    "src/components/AiTemporalSection.astro",
+    "src/components/AiTokenSection.astro",
+    "src/lib/utils/ai-dashboard-renderer.ts",
+    "src/pages/ai-metrics.astro"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "34d7ac296cda",
+  "checkpoint_transcript_start": 109,
+  "transcript_lines_at_start": 109,
+  "token_usage": {
+    "input_tokens": 226,
+    "cache_creation_tokens": 330609,
+    "cache_read_tokens": 32583594,
+    "output_tokens": 97064,
+    "api_call_count": 180
+  },
+  "session_metrics": {
+    "turn_count": 11
+  },
+  "summary": {
+    "intent": "Fix an AI metrics dashboard where BMAD Command Frequency and many other charts were empty or showing incorrect data, then add a checkpoint selector for filtering dashboard data.",
+    "outcome": "All major charts were fixed with real data, a checkpoint selector was implemented, and several data interpretation bugs (attribution inversion, wrong turn counts, missing BMAD commands) were resolved. Dashboard now shows 9 checkpoints with correct per-checkpoint filtering.",
+    "learnings": {
+      "repo": [
+        "Claude Code JSONL format stores user prompt at `parsed.message.content`, not `parsed.content`; slash commands are wrapped in `\u003ccommand-name\u003e/bmad-dev-story\u003c/command-name\u003e` XML tags, not bare strings",
+        "Checkpoint branch layout is `\u003c2-char-prefix\u003e/\u003ccheckpoint-id\u003e/` with per-session subdirectories (`/0/`, `/1/`, etc.) each containing `metadata.json` and `full.jsonl` — not a flat `checkpoints/\u003cid\u003e/metadata.json` structure",
+        "`initial_attribution` in session metadata is a cumulative repo-wide snapshot, not a per-checkpoint delta — `human_added: 708,268` means total repo human lines, not lines added in that checkpoint",
+        "Model info (`message.model`) is only in JSONL transcripts on assistant messages, not in session `metadata.json`",
+        "GitHub unauthenticated API rate limit is 60 req/hour; fetching JSONL transcripts for all sessions across 9 checkpoints exceeds this, causing silent failures for later checkpoints",
+        "Checkpoints without session subdirectories have epoch dates (1970) and all-zero data — these must be filtered out before rendering",
+        "Peak `agent_percentage` across sessions is more reliable than last-session attribution because humans edit agent code between sessions, reclassifying attribution downward"
+      ],
+      "code": [
+        {
+          "path": "scripts/fetch-checkpoints.ts",
+          "finding": "extractBmadCommands had wrong content path (parsed.content vs parsed.message.content) and wrong regex (/^\\/[a-z]/ missed XML-wrapped commands)"
+        },
+        {
+          "path": "src/components/AiBehavioralSection.astro",
+          "finding": "BMAD Command Frequency used DARK_CHART_OPTIONS spread for horizontal bar chart — the shared scales.y config forced linear scale with yMax:1 on a category axis, making all bars invisible"
+        },
+        {
+          "path": "src/components/AiQualitySection.astro",
+          "finding": "Session Depth scatter chart used turns.length (session count: 1-5) instead of sum(turn_count) for x-axis — actual API calls range 2-70"
+        },
+        {
+          "path": "src/components/AiTokenSection.astro",
+          "finding": "API Call Count chart also used turns.length (session count) instead of sum(turn_count)"
+        },
+        {
+          "path": "src/lib/utils/ai-dashboard-renderer.ts",
+          "finding": "Initial SSR-created Chart.js instances were not destroyed before re-render on checkpoint selection; needed to call Chart.getChart(canvas) and destroy before creating new instance"
+        }
+      ],
+      "workflow": [
+        "Astro's bundler processes `\u003cscript type=\"application/json\"\u003e` blocks — use data attributes on HTML elements instead to embed JSON for client-side JS",
+        "When GitHub rate limit is hit mid-fetch, errors are silent and later checkpoints get empty BMAD/model/prompt data; local JSONL files can be used to patch the cache",
+        "Chart.js horizontal bar charts (indexAxis: 'y') require explicit scale configuration and cannot safely inherit shared options designed for vertical charts"
+      ]
+    },
+    "friction": [
+      "GitHub unauthenticated API rate limit (60 req/hour) caused multiple blocked fetch attempts and silent data gaps — required waiting ~47 minutes between attempts",
+      "Cache patching from local JSONL files was needed repeatedly because remote fetches kept hitting rate limits mid-execution",
+      "Attribution data was fundamentally misleading (cumulative repo snapshots vs per-checkpoint deltas) — required redefining the chart metric entirely rather than fixing a code bug",
+      "Astro bundler silently broke `\u003cscript type=\"application/json\"\u003e` data embedding, causing a JSON parse error only visible in the browser console"
+    ],
+    "open_items": [
+      "Model Distribution and Prompt Type Distribution still require a re-fetch with a GitHub PAT or after rate limit reset to get data from GitHub-hosted JSONL transcripts (currently patched from local files only)",
+      "Friction Count, Open Items Over Time, and Learnings per Checkpoint charts were removed because the data fields don't exist in the checkpoint format — if these metrics become available in the future they would need to be re-added",
+      "Fetch script hits GitHub rate limit for repos with many checkpoints/sessions — should implement batching, caching of individual JSONL files, or require a PAT for large repos",
+      "4 checkpoints without session subdirectories are silently filtered out — root cause (why they exist with no sessions) is unknown and may indicate a data pipeline issue upstream"
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T17:23:39.856769Z",
+    "agent_lines": 696,
+    "human_added": 228,
+    "human_modified": 7,
+    "human_removed": 0,
+    "total_committed": 931,
+    "agent_percentage": 74.75832438238453
+  }
+}

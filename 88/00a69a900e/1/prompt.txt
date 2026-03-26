@@ -1,0 +1,65 @@
+Looks like BMAD Command Frequency is empty but I am pretty sure that bmad specific commands and skills and agents were executed, could you please check the source and enture that we properly ftching data
+
+---
+
+what key do I need
+
+---
+
+looks like not all charts are filled with proper data, validate why a lot of the charts are empty
+
+---
+
+looks like not all charts are filled with proper data, validate why a lot of the charts are empty
+
+---
+
+I can see that a lot of charts are incorrect sill and not showing data like BMAD Command Frequency
+please use playwrite to check current state and investigate what is wrong
+
+---
+
+Model Distribution must be specified in the current data 
+Zero-Human-Touch Lines also should be shown please check current datasource to ensure 
+Files Touched by Layer all charts where we show per checkpoint must be rdered by date time ask 
+Commit Activity Timeline - dates are not provided 
+In some charts we show hash - can we update it and show some line from summury in case it is exeists 
+
+Remove Friction Count, Open Items Over Time, Learnings per Checkpoint - remove them 
+Human Modification Rate - also there must be data even from current datasource 
+
+If required please run playwritte to ensure that all charts are working as expected
+
+---
+
+I would like to add apportunity to also be able to select checkpoint and show data only from dedicated checkpoint
+
+---
+
+could you ensure that Line Contribution Breakdown is not inverted, as a lot of code were done by agents, but looks like it is was done by human
+
+---
+
+double check one more time, for example for e4
+/61ea5b9722
+    "calculated_at": "2026-03-25T15:34:11.112493Z",
+    "agent_lines": 0,
+    "human_added": 708268,
+    "human_modified": 21,
+    "human_removed": 0,
+    "total_committed": 708268,
+    "agent_percentage": 0
+
+humad did a lot more
+
+---
+
+could you also review Session Depth vs Agent Percentage looks like we are not providing turns there, check if they are present in the datasource
+
+---
+
+could you fetch fresh data
+
+---
+
+when you select 9103598e5336 checkpoint a lot of charts are not working , like BMAD Command Frequency, but I belive it must actually work
