@@ -1,0 +1,5 @@
+/bmad-create-story @_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md as a delta prd to implement
+
+---
+
+/bmad-dev-story
