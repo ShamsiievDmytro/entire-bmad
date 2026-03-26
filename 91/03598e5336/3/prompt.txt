@@ -1,0 +1,6 @@
+Please review @_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md 
+if implemented stories covered all requirments defined
+
+---
+
+per checkpoint is more right way, because there could be several sessions to perfrom one task

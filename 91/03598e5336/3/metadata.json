@@ -1,0 +1,76 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "9103598e5336",
+  "session_id": "47efce6a-a092-4fa9-90b9-3b7a560af987",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T12:25:34.305467Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".gitignore",
+    "_bmad-output/implementation-artifacts/deferred-work.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md",
+    "_bmad-output/planning-artifacts/prd.md",
+    "astro.config.mjs",
+    "eslint.config.js",
+    "package-lock.json",
+    "package.json",
+    "vitest.config.ts"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "e1202e421a61",
+  "token_usage": {
+    "input_tokens": 1497,
+    "cache_creation_tokens": 33633,
+    "cache_read_tokens": 402517,
+    "output_tokens": 5875,
+    "api_call_count": 11
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "summary": {
+    "intent": "Verify that the implemented stories (5.1 and 5.2) cover all requirements defined in the AI Metrics Dashboard PRD, and correct any discrepancies found.",
+    "outcome": "All 20 metrics and FR1–FR33 were confirmed implemented. Two interpretation gaps were identified (FR21, FR25), one NFR was formally deferred (NFR8), and FR25 in both PRD documents was corrected to reflect the per-checkpoint aggregation model.",
+    "learnings": {
+      "repo": [
+        "The project uses two PRD files: a full PRD at `_bmad-output/planning-artifacts/prd.md` and a delta PRD at `_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md` — both must be kept in sync.",
+        "Deferred work is tracked in `_bmad-output/implementation-artifacts/deferred-work.md`.",
+        "The cache schema does not include `session_metrics.turn_count`; `turns.length` per checkpoint is used as the equivalent.",
+        "GitHub's content API has a 1MB limit, which is the practical justification for not streaming `full.jsonl` line-by-line (NFR8 deviation)."
+      ],
+      "code": [
+        {
+          "path": "_bmad-output/planning-artifacts/prd.md",
+          "finding": "FR25 was corrected: original wording described per-session aggregation (checkpoints per session), but the correct model is per-checkpoint (unique sessions per checkpoint), because a single task checkpoint can span multiple resumed sessions."
+        },
+        {
+          "path": "_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md",
+          "finding": "FR25 updated here as well to match the corrected interpretation in the main PRD."
+        }
+      ],
+      "workflow": [
+        "When validating story coverage against a PRD, cross-checking both the requirement text and the cache/data schema is necessary — schema gaps can force implementation adaptations that diverge from spec wording without being wrong.",
+        "Per-checkpoint aggregation is semantically richer than per-session when the data model allows multiple sessions per checkpoint (task-resumption pattern)."
+      ]
+    },
+    "friction": [
+      "FR25 wording in the PRD described the wrong aggregation axis — the implementation was actually more correct than the spec, requiring a PRD correction rather than a code fix.",
+      "NFR10 (schema validation before cache write) had no explicit implementation found, leaving it in a gray area."
+    ],
+    "open_items": [
+      "NFR8: `full.jsonl` is loaded into memory instead of streamed line-by-line. Formally non-compliant with the spec; tracked in `deferred-work.md`. Revisit if files approach the 1MB GitHub API limit.",
+      "NFR10: Explicit schema validation step before cache write is unconfirmed — worth adding a validation pass to fully satisfy the spec."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T12:25:16.872972Z",
+    "agent_lines": 704,
+    "human_added": 3050,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3754,
+    "agent_percentage": 18.75332978156633
+  }
+}

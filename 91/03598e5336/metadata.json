@@ -3,12 +3,13 @@
   "checkpoint_id": "9103598e5336",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 11,
+  "checkpoints_count": 13,
   "files_touched": [
     ".gitignore",
     "_bmad-output/implementation-artifacts/5-2-ai-metrics-dashboard-page.md",
     "_bmad-output/implementation-artifacts/deferred-work.md",
     "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md",
     "_bmad-output/planning-artifacts/prd.md",
     "astro.config.mjs",
     "eslint.config.js",
@@ -43,13 +44,19 @@
       "transcript": "/91/03598e5336/2/full.jsonl",
       "content_hash": "/91/03598e5336/2/content_hash.txt",
       "prompt": "/91/03598e5336/2/prompt.txt"
+    },
+    {
+      "metadata": "/91/03598e5336/3/metadata.json",
+      "transcript": "/91/03598e5336/3/full.jsonl",
+      "content_hash": "/91/03598e5336/3/content_hash.txt",
+      "prompt": "/91/03598e5336/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 690,
-    "cache_creation_tokens": 273874,
-    "cache_read_tokens": 8850504,
-    "output_tokens": 88804,
-    "api_call_count": 99
+    "input_tokens": 2187,
+    "cache_creation_tokens": 307507,
+    "cache_read_tokens": 9253021,
+    "output_tokens": 94679,
+    "api_call_count": 110
   }
 }
