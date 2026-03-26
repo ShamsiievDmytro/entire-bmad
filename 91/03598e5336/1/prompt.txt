@@ -1,0 +1,7 @@
+So we imlemented entire sprint @_bmad-output/implementation-artifacts/sprint-status.yaml 
+
+I want to be sure that @_bmad-output/planning-artifacts/prd.md document is up to date and reflects all the requirments as I want to make it master prd to trach next sprints we will have
+
+---
+
+yes

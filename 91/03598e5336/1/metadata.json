@@ -1,0 +1,69 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "9103598e5336",
+  "session_id": "23ed3231-3de0-436f-b47c-0bed51b93d39",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T12:24:30.954522Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "_bmad-output/planning-artifacts/prd.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "7b0b42bfd9c4",
+  "token_usage": {
+    "input_tokens": 15,
+    "cache_creation_tokens": 29102,
+    "cache_read_tokens": 336613,
+    "output_tokens": 4071,
+    "api_call_count": 11
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "summary": {
+    "intent": "Ensure the PRD accurately reflects all implemented sprint 1 features so it can serve as the master document for tracking future sprints.",
+    "outcome": "PRD updated with correct state management architecture (nanostores atoms), a new Known Technical Debt section, and sprint-status.yaml updated to mark stories 2.2/2.3/2.4 as done.",
+    "learnings": {
+      "repo": [
+        "Project uses nanostores with 4 shared atoms (priceStore, statusStore, marketStore, chartStore) as a cross-island global state layer — not component-local state as the PRD originally claimed.",
+        "Data flow is: ConnectionManager/MarketDataService → nanostores atoms → island components, not WebSocket → island component → DOM.",
+        "Deferred technical debt is tracked in _bmad-output/implementation-artifacts/deferred-work.md with ~12 acknowledged items.",
+        "Sprint artifacts live under _bmad-output/ split between planning-artifacts/ and implementation-artifacts/."
+      ],
+      "code": [
+        {
+          "path": "_bmad-output/planning-artifacts/prd.md",
+          "finding": "State management section was out of sync with implementation — described component-local state but nanostores global atoms were actually built."
+        },
+        {
+          "path": "_bmad-output/implementation-artifacts/sprint-status.yaml",
+          "finding": "Stories 2.2, 2.3, 2.4 were left in 'review' status despite the sprint being considered complete."
+        }
+      ],
+      "workflow": [
+        "PRD accuracy should be verified against story files and deferred-work.md at sprint end before promoting it to master planning doc.",
+        "Sprint status files need manual updates when stories transition to done — they do not self-update."
+      ]
+    },
+    "friction": [
+      "PRD technical architecture section diverged significantly from what was built (nanostores vs. no global state), requiring correction before the document could be trusted.",
+      "Sprint status yaml was stale — stories marked 'review' instead of 'done' despite sprint being complete."
+    ],
+    "open_items": [
+      "~12 deferred technical debt items tracked in deferred-work.md — none addressed this sprint, referenced in new PRD Known Technical Debt section.",
+      "Phase 2 and Phase 3 of the PRD are defined and ready for sprint planning.",
+      "Full detail on deferred items available in _bmad-output/implementation-artifacts/deferred-work.md for next sprint grooming."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T12:24:17.298928Z",
+    "agent_lines": 333,
+    "human_added": 3421,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3754,
+    "agent_percentage": 8.87053809270112
+  }
+}
