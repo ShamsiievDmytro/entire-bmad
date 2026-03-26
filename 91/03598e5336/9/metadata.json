@@ -1,0 +1,86 @@
+{
+  "cli_version": "0.5.1",
+  "checkpoint_id": "9103598e5336",
+  "session_id": "ce612337-7a9b-45a6-8d07-03b0b8a10576",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-26T12:27:40.537704Z",
+  "branch": "main",
+  "checkpoints_count": 30,
+  "files_touched": [
+    "_bmad-output/brainstorming/brainstorming-session-2026-03-26-1400.md",
+    "_bmad-output/implementation-artifacts/sprint-status.yaml",
+    "_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md",
+    "_bmad-output/planning-artifacts/prd.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-4-6",
+  "turn_id": "d051e01715da",
+  "token_usage": {
+    "input_tokens": 3978,
+    "cache_creation_tokens": 240201,
+    "cache_read_tokens": 10340941,
+    "output_tokens": 68134,
+    "api_call_count": 115
+  },
+  "session_metrics": {
+    "turn_count": 30
+  },
+  "summary": {
+    "intent": "Research Entire platform checkpoint data structure to identify all possible AI usage metrics derivable from the Git branch, then create a comprehensive PRD for an AI Metrics Dashboard PoC to demonstrate to an internal team as a potential SDLC metrics solution.",
+    "outcome": "Completed a full /bmad-brainstorming session identifying 36 metrics across 8 domains, confirmed a GitHub API → local JSON cache → Astro static build architecture (Option A), and produced a complete PRD (`_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md`) covering 20 metrics, 33 functional requirements, 13 NFRs, 3 user journeys, and a phased roadmap.",
+    "learnings": {
+      "repo": [
+        "The `entire/checkpoints/v1` branch contains ~11 checkpoint groups with ~30 total turns; each checkpoint has a parent `metadata.json`, per-turn `metadata.json`, `full.jsonl` transcript, `prompt.txt`, and `content_hash.txt`",
+        "Parent metadata aggregates token_usage but lacks `created_at`; datetime must come from turn-level metadata or commit log — not parent metadata",
+        "BMAD slash command invocations (e.g. `/bmad-dev-story`) appear in `type:'user'` messages inside `full.jsonl`, not only in `prompt.txt` — `prompt.txt` only captures turn-initiating prompts",
+        "The `entire/checkpoints/v1` branch has ~44 files needing API calls total, fitting within GitHub's unauthenticated 60 req/hour limit",
+        "The existing `prd.md` is for the Bitcoin price dashboard project — the new AI metrics PRD was written to a separate file `prd-ai-metrics-dashboard.md` to avoid conflict",
+        "The `sprint-status.yaml` in implementation-artifacts tracks the Bitcoin dashboard project, not this new dashboard"
+      ],
+      "code": [
+        {
+          "path": "_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md",
+          "line": 1,
+          "end_line": 400,
+          "finding": "Complete PRD for AI Metrics Dashboard PoC: greenfield, medium complexity, web_app, static Astro SPA reading from local JSON cache built from GitHub API checkpoint branch data"
+        },
+        {
+          "path": "_bmad-output/brainstorming/brainstorming-session-2026-03-26-1400.md",
+          "line": 1,
+          "end_line": 300,
+          "finding": "Contains the full Entire checkpoint data model, 11 checkpoint group inventory, all 36 brainstormed metrics with morphological analysis, and the confirmed Option A cache architecture decision"
+        }
+      ],
+      "workflow": [
+        "GitHub API `/git/trees/{branch}?recursive=1` is the correct endpoint to discover all checkpoint paths in one call before fetching individual files",
+        "For `full.jsonl` files up to 4.7MB, targeted line-by-line streaming (extracting only `type:'user'` messages for command strings) is the right approach — avoids loading full transcripts into memory",
+        "Cache schema should include a top-level `bmad_commands` array aggregating command frequencies across all checkpoints to avoid re-parsing at dashboard render time",
+        "Commit datetime for ordering/filtering metrics must be joined via checkpoint_id extracted from the commit message (`Checkpoint: {id}`) since parent metadata.json has no timestamp",
+        "The /bmad-party-mode skill is useful for challenging scope and classification decisions before committing them to a PRD — it surfaced the reframing from 'demo' to 'proposal artifact for internal adoption'"
+      ]
+    },
+    "friction": [
+      "Branch name was initially misread — `entire` alone was tried as the ref before discovering the full branch name is `entire/checkpoints/v1`, requiring a branches list call first",
+      "Edit tool failed due to trailing whitespace mismatch in `old_string` — required reading the file first to get exact content before the edit succeeded",
+      "Context window ran out mid-session during the PRD creation workflow (between step 9 and step 10), requiring a full session summary to continue"
+    ],
+    "open_items": [
+      "Build `scripts/fetch-checkpoints.ts` — the GitHub API data pipeline script that produces `src/data/checkpoints-cache.json`",
+      "Build the AI metrics dashboard with all 20 charts across Attribution, Token Economics, Quality, Behavioral, and Temporal domains",
+      "Run `/bmad-check-implementation-readiness` to validate PRD completeness before architecture/story work begins",
+      "Decide whether to proceed with `/bmad-create-architecture`, `/bmad-create-epics-and-stories`, or go straight to `/bmad-dev-story` for iterative implementation",
+      "Phase 2 (post-demo): make repo/branch configurable via `.env`, add GitLab API support as a drop-in replacement for GitHub API",
+      "Phase 2: add `full.jsonl` deep analysis metrics (tool call palette, thinking block ratio, stop reason distribution, inference region latency) — deferred from v1 as heavy-tier",
+      "Phase 3: real-time ingestion pipeline via webhook on checkpoint branch push, multi-repo and team comparison views"
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-26T12:27:05.648876Z",
+    "agent_lines": 614,
+    "human_added": 3140,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3754,
+    "agent_percentage": 16.35588705380927
+  }
+}
