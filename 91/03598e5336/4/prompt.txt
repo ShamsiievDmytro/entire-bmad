@@ -1,0 +1,1 @@
+I would like to run the implemented metrics application and test it using playwrote to ensure that everything is covered and working as expected
