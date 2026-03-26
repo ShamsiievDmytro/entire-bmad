@@ -1,0 +1,5 @@
+/bmad-help
+
+---
+
+I am thinking maybe we can merge @_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md into @_bmad-output/planning-artifacts/prd.md to make it master pdr and leave @_bmad-output/planning-artifacts/prd-ai-metrics-dashboard.md  as delta to work with
