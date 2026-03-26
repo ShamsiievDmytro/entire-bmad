@@ -1,0 +1,133 @@
+/bmad-code-review
+
+---
+
+y
+
+---
+
+y
+
+---
+
+<task-notification>
+<task-id>a97c3e867dbf65896</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a97c3e867dbf65896.output</output-file>
+<status>completed</status>
+<summary>Agent "Blind Hunter adversarial review" completed</summary>
+<result>- **Commit list capped at 100 — checkpoints beyond that silently get epoch date** [BUG]
+  `scripts/fetch-checkpoints.ts`, `commitsUrl` construction (Step 2 block): The commits endpoint uses `per_page=100` with no pagination loop. Any checkpoint whose commit falls outside the first 100 commits receives `new Date(0).toISOString()` as its `commit_date`, corrupting time-series data silently.
+
+- **`apiCallCount` is a mutable module-level global — test isolation broken** [BUG]
+  `scripts/fetch-checkpoints.ts` line `let apiCallCount = 0;`: Because `apiCallCount` is never reset between calls, parallel or sequential test runs that import `fetchWithRetry` will accumulate counts across test cases, and the reported total in the final log will be wrong if `run()` is ever called more than once in the same process.
+
+- **GitHub token logged/exposed via `GITHUB_TOKEN` present in environment and passed in plain headers, but `buildHeaders` accepts any caller-supplied string with no validation** [SECURITY]
+  `scripts/fetch-checkpoints.ts` `buildHeaders`: While not a direct leak, the token is placed verbatim into an object that is passed to every `fetchWithRetry` call including user-controlled `url` values. If a `url` is ever derived from untrusted data (e.g., a malicious `path` value from the tree API response), the token will be sent to that URL. The `path` value from `treeData['tree']` is not sanitised before being interpolated into the GitHub API URL in `fetchContent`.
+
+- **Tree API `path` values from GitHub response interpolated into URLs without validation** [SECURITY]
+  `scripts/fetch-checkpoints.ts`, `fetchContent` call inside `run()`: `path` comes directly from `item['path']` in the tree response. A compromised or unexpected repository response containing a path with URL-encoded traversal sequences or an absolute URL segment could redirect the authenticated request to an unintended endpoint, exfiltrating the bearer token.
+
+- **`full.jsonl` fetch failure is completely silent — no counter, no warning, no `fetch_failed` flag** [LOGIC]
+  `scripts/fetch-checkpoints.ts`, inner `try/catch` around `fetchContent(jsonlPath, ...)`: When the heavy-tier fetch fails, `bmad_commands` is silently left as `{}` and `fetch_failed` remains `false`. This is indistinguishable from a checkpoint that genuinely has no BMAD commands, making data quality issues invisible to downstream consumers.
+
+- **`fetchWithRetry` test for non-ok HTTP response attempts only 1 call, but implementation retries twice — test assertion is wrong** [BUG]
+  `scripts/fetch-checkpoints.test.ts`, `'throws on non-ok HTTP response after two attempts'`: The mock uses `mockImplementation` (not `mockImplementationOnce`), so it will return `{ ok: false }` on both attempts. The test does not assert `toHaveBeenCalledTimes(2)`, so it would also pass if retry logic were removed entirely, making it a non-covering test for the retry path on HTTP errors.
+
+- **`resolve('./src/data/checkpoints-cache.json')` resolves relative to CWD, not script location — breaks if script is run from a different directory** [BUG]
+  `scripts/fetch-checkpoints.ts` output path and `astro.config.mjs` guard both use `resolve('./')`. If `npm run fetch-checkpoints` is invoked from any directory other than the project root, the file is written to (or checked for) the wrong path, silently producing no output or a false-negative guard failure.
+
+- **`BRANCH_ENCODED` is a hand-maintained duplicate of `BRANCH` — they can drift** [LOGIC]
+  `scripts/fetch-checkpoints.ts` lines defining `BRANCH` and `BRANCH_ENCODED`: The encoded form is hardcoded rather than computed with `encodeURIComponent(BRANCH)`. A future branch rename will update `BRANCH` but leave `BRANCH_ENCODED` stale, causing all API calls to silently target the wrong ref with no error until runtime.</result>
+<usage><total_tokens>15933</total_tokens><tool_uses>0</tool_uses><duration_ms>26862</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a97c3e867dbf65896.output
+
+---
+
+<task-notification>
+<task-id>a681d37f88318870d</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a681d37f88318870d.output</output-file>
+<status>completed</status>
+<summary>Agent "Edge Case Hunter review" completed</summary>
+<result>- **`getNumber` returns `0` for actual `0`, masking legitimate zero token counts via `||` fallback chain**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, `parseMetadata` token block (~line 160)
+  When `tokensRaw` exists and a token field is legitimately `0`, the expression `getNumber(tokensRaw, 'input') || getNumber(raw, 'input_tokens')` evaluates `0 || getNumber(raw, 'input_tokens')`, causing the fallback flat field to silently override a valid zero. The result is a wrong token count whenever the nested object contains `0` and the flat field has a non-zero value, or vice-versa.
+
+- **Commit list silently truncated at 100; checkpoints beyond the first 100 commits always get `epoch` date**
+  Category: [BOUNDARY]
+  File: `scripts/fetch-checkpoints.ts`, `run()` ~line 222
+  The commits URL uses `per_page=100` with no pagination loop. If the branch has more than 100 commits, any checkpoint whose commit message appears in commit 101+ will never be matched in `commitDateMap`, so `commitDate` falls back to `new Date(0).toISOString()` (1970-01-01). Downstream date-based sorting/filtering will treat those checkpoints as from the Unix epoch.
+
+- **`treeData['tree']` may be a truncated tree; `truncated: true` is never checked, silently dropping checkpoints**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, `run()` ~line 213
+  The GitHub Trees API sets `truncated: true` when the tree exceeds 100,000 entries. The code never inspects this field, so if the repository tree is large, only a partial list of checkpoint `metadata.json` files is processed and the rest are silently skipped.
+
+- **`extractBmadCommands` reads only `content` or `prompt` string fields; array-valued `content` (tool-result messages) is silently skipped, potentially missing user commands**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, `extractBmadCommands` ~line 26
+  The Anthropic JSONL format allows `content` to be an array of content blocks (e.g., `[{type:"text", text:"/bmad-doc"}]`). `getString` returns `undefined` for arrays, so the code falls through to an empty string and never examines the text inside the blocks. Commands embedded in array-valued content are silently missed.
+
+- **`parseTurn` returns a zero-filled stub for any non-record turn, hiding malformed data without any warning**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, `parseTurn` ~line 134
+  If a turn entry in the JSONL is a primitive or an array (e.g., a bare string or `null`), `parseTurn` returns a silent empty `TurnMeta` with empty IDs and zero counts. These phantom turns are appended to `turns[]` and counted, inflating `turns.length` while carrying no usable data.
+
+- **`fetchContent` strips only `\n` from base64 before decoding; GitHub also inserts `\r\n` on Windows-style responses, causing `Buffer.from` to produce garbage output**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, `fetchContent` ~line 90
+  The replacement is `.replace(/\n/g, '')` which removes `\n` but not `\r`. If the GitHub API returns base64 with `\r\n` line endings (possible depending on client/platform), the `\r` characters remain, making the base64 string invalid and yielding corrupted decoded content rather than throwing a clear error.
+
+- **`apiCallCount` is a module-level mutable; if `run()` is ever called more than once (e.g., in tests), the count accumulates across runs and the logged total is wrong**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, top of file ~line 11 and `fetchWithRetry` ~line 59
+  `apiCallCount` is never reset between `run()` invocations. In the test harness (the file exports `fetchWithRetry`), any test that calls `fetchWithRetry` pollutes the global counter, and a subsequent real `run()` logs a cumulative — not per-run — API call count.
+
+- **`metadataPaths` regex allows checkpoint IDs containing characters that are valid in URL paths but are treated as path separators in subsequent `path.replace` call, enabling path traversal in the constructed `jsonlPath`**
+  Category: [EDGE-CASE]
+  File: `scripts/fetch-checkpoints.ts`, ~line 216 (regex) and ~line 253 (`path.replace`)
+  The regex `[^/]+` accepts checkpoint IDs with characters like `%2F` or `.`. The `jsonlPath` is built with `path.replace('metadata.json', 'full.jsonl')` using a plain string replace, not anchored to the end of the path. If a checkpoint directory name contains the literal substring `metadata.json`, the replace fires at the wrong position, constructing a malformed or unintended path that is then fetched from GitHub.</result>
+<usage><total_tokens>13382</total_tokens><tool_uses>1</tool_uses><duration_ms>34797</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a681d37f88318870d.output
+
+---
+
+<task-notification>
+<task-id>a02ebe81e063d05e8</task-id>
+<tool-use-id>toolu_01EtgbivGZmmL1cbEaknzqkf</tool-use-id>
+<output-file>/private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a02ebe81e063d05e8.output</output-file>
+<status>completed</status>
+<summary>Agent "Acceptance Auditor spec review" completed</summary>
+<result>- **`fetchWithRetry` does not set `fetch_failed: true` on double failure — it re-throws** — violates AC#4. The spec requires that if the retry also fails, the affected checkpoint gets `fetch_failed: true` and the script continues. The diff shows `fetchWithRetry` throws `lastError` after two attempts; there is no catch at the call site in the fetch loop shown that sets `fetch_failed: true` and continues — the throw would propagate upward and potentially abort the script rather than marking the checkpoint and moving on.
+
+- **Retry delay is applied before the second attempt but not validated as exactly 2 seconds from spec** — AC#4 specifies "retries once after 2 seconds." `RETRY_DELAY_MS = 2000` appears correct, but the loop runs `attempt < 2` (attempts 0 and 1), meaning the delay fires on attempt 1 (the retry). This is consistent, but the loop structure allows silent changes; worth flagging that the constant must remain 2000ms to satisfy the AC.
+
+- **BMAD command regex deviates from spec** — violates AC#5 / Dev Notes. The spec mandates `/^\/[a-z-]+/`; the implementation uses `/^\/[a-z][a-z0-9-]*/`. This excludes commands starting with a digit after the slash (minor) but more importantly it requires the first character after `/` to be `[a-z]` (not `[a-z-]`) and allows digits in subsequent positions, which the spec regex does not. Any command the spec regex would match that starts with a hyphen (e.g. `/-foo`) would be missed.
+
+- **`extractBmadCommands` scans all lines, not only `"type":"user"` lines** — violates AC#5. The spec states "only lines with `"type":"user"` are scanned." The diff shows the function receives the full `jsonlContent` string and applies the regex to every parsed line without filtering on a `type` field equal to `"user"`.
+
+- **`full.jsonl` is fetched entirely into memory via `fetchContent`, not streamed line-by-line** — violates AC#5. The spec requires parsing "line-by-line" without "loading into memory," but `jsonlText` is the complete file contents assigned to a string variable before being passed to `extractBmadCommands`.
+
+- **No `User-Agent` validation at the HTTP call level for non-`fetchWithRetry` paths** — violates Dev Notes / AC#2. The `buildHeaders` function correctly adds `User-Agent: metrics-fetch-script`, but if any fetch path bypasses `buildHeaders` (e.g., a direct `fetchContent` call not shown to use the same headers object), the required header could be absent. The diff does not show `fetchContent`'s implementation, leaving this unverifiable.
+
+- **Warning message for missing `GITHUB_TOKEN` is not shown in the diff** — violates AC#3. The spec requires logging `WARN: No GITHUB_TOKEN set — unauthenticated requests (60 req/hour limit)`. The diff shows `buildHeaders` silently omits the auth header when no token is provided but contains no `console.warn` or equivalent log statement.
+
+- **Summary log format deviates from spec** — violates AC#6. The spec requires printing "checkpoint count, total API calls made, and elapsed time in seconds" as separate named values. The implementation prints `Checkpoints: ${checkpoints.length}, API calls: ${apiCallCount}, Time: ${elapsed}s` — "Time" vs the spec's "elapsed time in seconds" is a minor label mismatch, and whether `elapsed` is computed in seconds (not milliseconds) is not shown in the diff, leaving AC#6 partially unverifiable.
+
+- **Build guard error message uses `throw new Error(...)` instead of `console.error` + `process.exit`** — violates AC#7 intent. The spec calls for a "clear actionable message" printed to output. Throwing inside an Astro integration hook may produce a stack trace that buries the actionable message, rather than printing it cleanly to stderr.</result>
+<usage><total_tokens>10368</total_tokens><tool_uses>0</tool_uses><duration_ms>25307</duration_ms></usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-502/-Users-dmytroshamsiiev-Projects-metrics/76810eb8-896c-4b26-ad8f-8c27f4af8e0b/tasks/a02ebe81e063d05e8.output
+
+---
+
+1)Keep implementation regex
+2)throw
+
+---
+
+0

@@ -3,12 +3,13 @@
   "checkpoint_id": "9103598e5336",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 17,
+  "checkpoints_count": 24,
   "files_touched": [
     ".gitignore",
     ".playwright-mcp/console-2026-03-26T12-19-22-502Z.log",
     ".playwright-mcp/console-2026-03-26T12-19-35-931Z.log",
     ".playwright-mcp/console-2026-03-26T12-19-51-441Z.log",
+    "_bmad-output/implementation-artifacts/5-1-fetch-script-and-checkpoints-cache.md",
     "_bmad-output/implementation-artifacts/5-2-ai-metrics-dashboard-page.md",
     "_bmad-output/implementation-artifacts/deferred-work.md",
     "_bmad-output/implementation-artifacts/sprint-status.yaml",
@@ -19,6 +20,8 @@
     "eslint.config.js",
     "package-lock.json",
     "package.json",
+    "scripts/fetch-checkpoints.test.ts",
+    "scripts/fetch-checkpoints.ts",
     "src/components/AiAttributionSection.astro",
     "src/components/AiBehavioralSection.astro",
     "src/components/AiQualitySection.astro",
@@ -72,13 +75,19 @@
       "transcript": "/91/03598e5336/6/full.jsonl",
       "content_hash": "/91/03598e5336/6/content_hash.txt",
       "prompt": "/91/03598e5336/6/prompt.txt"
+    },
+    {
+      "metadata": "/91/03598e5336/7/metadata.json",
+      "transcript": "/91/03598e5336/7/full.jsonl",
+      "content_hash": "/91/03598e5336/7/content_hash.txt",
+      "prompt": "/91/03598e5336/7/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3892,
-    "cache_creation_tokens": 430810,
-    "cache_read_tokens": 10947744,
-    "output_tokens": 118171,
-    "api_call_count": 155
+    "input_tokens": 3954,
+    "cache_creation_tokens": 514822,
+    "cache_read_tokens": 13777750,
+    "output_tokens": 151154,
+    "api_call_count": 201
   }
 }
