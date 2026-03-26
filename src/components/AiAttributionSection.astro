@@ -9,7 +9,10 @@ const { checkpoints } = Astro.props;
 const sorted = [...checkpoints].sort(
   (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
 );
-const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+const labels = sorted.map((c) => {
+  const d = new Date(c.commit_date);
+  return `${(d.getMonth()+1)}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+});
 
 // Metric 1: agent_percentage time-series (lightweight-charts)
 const m1Series = sorted.map((c) => ({
@@ -22,31 +25,23 @@ const pureAiCount = checkpoints.filter((c) => c.agent_percentage === 100).length
 const pureAiRate =
   checkpoints.length > 0 ? Math.round((pureAiCount / checkpoints.length) * 100) : 0;
 
-// Metric 3: human modification rate bar chart
-const m3Values = sorted.map(
-  (c) => c.agent_lines === 0 ? 0 : Math.round((c.human_modified / c.agent_lines) * 100 * 10) / 10,
-);
+// Metric 3: human edit rate bar chart (human % per checkpoint)
+const m3Values = sorted.map((c) => {
+  return Math.round((100 - c.agent_percentage) * 10) / 10;
+});
 
-// Metric 4: stacked bar — agent/human lines per checkpoint
+// Metric 4: stacked percentage bar — agent% vs human% per checkpoint
+// NOTE: agent_lines/human_added are repo-wide snapshots, NOT per-checkpoint deltas.
+// We use agent_percentage directly which IS meaningful per checkpoint.
 const m4Datasets = JSON.stringify([
-  { label: 'Agent Lines', data: sorted.map((c) => c.agent_lines), backgroundColor: '#8b5cf6' },
-  { label: 'Human Added', data: sorted.map((c) => c.human_added), backgroundColor: '#22c55e' },
-  {
-    label: 'Human Modified',
-    data: sorted.map((c) => c.human_modified),
-    backgroundColor: '#f59e0b',
-  },
-  {
-    label: 'Human Removed',
-    data: sorted.map((c) => c.human_removed),
-    backgroundColor: '#ef4444',
-  },
+  { label: 'Agent %', data: sorted.map((c) => Math.round(c.agent_percentage * 10) / 10), backgroundColor: '#8b5cf6' },
+  { label: 'Human %', data: sorted.map((c) => Math.round((100 - c.agent_percentage) * 10) / 10), backgroundColor: '#22c55e' },
 ]);
 
-// Metric 5: cumulative zero-human-touch lines stat card
-const m5Value = checkpoints
-  .filter((c) => c.human_added === 0 && c.human_modified === 0 && c.human_removed === 0)
-  .reduce((sum, c) => sum + c.agent_lines, 0);
+// Metric 5: average agent percentage across checkpoints
+const m5Value = checkpoints.length > 0
+  ? Math.round(checkpoints.reduce((sum, c) => sum + c.agent_percentage, 0) / checkpoints.length * 10) / 10
+  : 0;
 ---
 
 <!-- Section heading -->
@@ -84,10 +79,10 @@ const m5Value = checkpoints
       </div>
     ) : (
       <div>
-        <div class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
+        <div id="stat-pure-ai-rate" class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
           {pureAiRate}%
         </div>
-        <p class="font-label text-text-secondary text-sm mt-1">
+        <p id="stat-pure-ai-detail" class="font-label text-text-secondary text-sm mt-1">
           {pureAiCount} of {checkpoints.length} commits fully AI-authored
         </p>
       </div>
@@ -97,11 +92,11 @@ const m5Value = checkpoints
 
 <!-- Metric 3: Human Modification Rate -->
 <div class="card-glass p-4">
-  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Human Modification Rate</h3>
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Human Edit Rate</h3>
   <p class="font-label text-text-muted text-xs mb-1">
-    Human-modified lines as a percentage of agent lines per checkpoint.
+    Human-contributed lines as a share of total committed lines per checkpoint.
   </p>
-  <p class="font-label text-text-muted text-xs mb-3">Source: human_modified, agent_lines</p>
+  <p class="font-label text-text-muted text-xs mb-3">Source: human_added, human_modified, human_removed, agent_lines</p>
   <div style="position:relative; height:200px">
     <canvas
       id="metric-3"
@@ -111,16 +106,16 @@ const m5Value = checkpoints
   </div>
 </div>
 
-<!-- Metric 4: Line Contribution Breakdown (wide) -->
+<!-- Metric 4: Attribution Breakdown (wide) -->
 <div class="card-glass p-4 md:col-span-2">
   <h3 class="font-label text-text-primary font-medium text-sm mb-1">
-    Line Contribution Breakdown
+    Attribution Breakdown
   </h3>
   <p class="font-label text-text-muted text-xs mb-1">
-    Stacked view of agent, human-added, modified, and removed lines per checkpoint.
+    Agent vs human share of committed code per checkpoint (stacked to 100%).
   </p>
   <p class="font-label text-text-muted text-xs mb-3">
-    Source: agent_lines, human_added, human_modified, human_removed
+    Source: agent_percentage
   </p>
   <div style="position:relative; height:220px">
     <canvas
@@ -131,14 +126,14 @@ const m5Value = checkpoints
   </div>
 </div>
 
-<!-- Metric 5: Zero-Human-Touch Lines (stat card) -->
+<!-- Metric 5: Average Agent Attribution (stat card) -->
 <div class="card-glass p-5">
-  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Zero-Human-Touch Lines</h3>
+  <h3 class="font-label text-text-primary font-medium text-sm mb-1">Avg Agent Attribution</h3>
   <p class="font-label text-text-muted text-xs mb-4">
-    Cumulative agent lines in checkpoints with no human edits at all.
+    Average AI-authored percentage across all checkpoints.
   </p>
   <p class="font-label text-text-muted text-xs mb-2">
-    Source: agent_lines, human_added, human_modified, human_removed
+    Source: agent_percentage
   </p>
   {
     checkpoints.length === 0 ? (
@@ -147,10 +142,10 @@ const m5Value = checkpoints
       </div>
     ) : (
       <div>
-        <div class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
-          {m5Value.toLocaleString()}
+        <div id="stat-agent-lines" class="font-price text-accent-primary" style="font-size:48px;line-height:1.1">
+          {m5Value}%
         </div>
-        <p class="font-label text-text-secondary text-sm mt-1">lines untouched by humans</p>
+        <p id="stat-agent-lines-detail" class="font-label text-text-secondary text-sm mt-1">average across {checkpoints.length} checkpoints</p>
       </div>
     )
   }

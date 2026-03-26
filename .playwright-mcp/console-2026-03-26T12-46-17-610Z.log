@@ -1,0 +1,7 @@
+[      48ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  282762ms] [WARNING] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently @ :14
+[  403921ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  413110ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  424603ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  436493ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  452945ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0

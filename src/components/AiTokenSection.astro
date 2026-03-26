@@ -9,7 +9,10 @@ const { checkpoints } = Astro.props;
 const sorted = [...checkpoints].sort(
   (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
 );
-const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+const labels = sorted.map((c) => {
+  const d = new Date(c.commit_date);
+  return `${(d.getMonth()+1)}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+});
 
 // Metric 6: stacked token breakdown
 const m6Datasets = JSON.stringify([
@@ -36,8 +39,8 @@ const m7Series = sorted.map((c) => {
   };
 });
 
-// Metric 8: API call count (turns.length per checkpoint)
-const m8Values = sorted.map((c) => c.turns.length);
+// Metric 8: API call count (sum of turn_count across sessions)
+const m8Values = sorted.map((c) => c.turns.reduce((sum, t) => sum + t.turn_count, 0));
 
 // Metric 9: model distribution doughnut
 const modelMap = new Map<string, number>();
@@ -224,7 +227,8 @@ const DOUGHNUT_COLORS = ['#8b5cf6', '#00f5ff', '#22c55e', '#f59e0b', '#ef4444', 
     const labels: string[] = JSON.parse(m9Canvas.dataset.labels ?? '[]');
     const values: number[] = JSON.parse(m9Canvas.dataset.values ?? '[]');
     const colors: string[] = JSON.parse(m9Canvas.dataset.colors ?? '[]');
-    if (!values.length) {
+    const hasRealLabels = labels.some((l) => l.trim() !== '');
+    if (!values.length || !hasRealLabels) {
       const p9 = m9Canvas.parentElement;
       if (p9) p9.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
     } else {

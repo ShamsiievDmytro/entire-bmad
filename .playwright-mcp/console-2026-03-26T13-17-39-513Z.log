@@ -1,0 +1,6 @@
+[     113ms] SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at http://localhost:4322/src/pages/ai-metrics.astro?astro&type=script&index=0&lang.ts:4:31
+[   20173ms] SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at http://localhost:4322/src/pages/ai-metrics.astro?astro&type=script&index=0&lang.ts:4:31

@@ -10,7 +10,10 @@ const { checkpoints } = Astro.props;
 const sorted = [...checkpoints].sort(
   (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
 );
-const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+const labels = sorted.map((c) => {
+  const d = new Date(c.commit_date);
+  return `${(d.getMonth()+1)}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+});
 
 // Metric 18: commit activity timeline scatter (per-point colors)
 const m18Points = sorted.map((c) => ({
@@ -30,7 +33,10 @@ const cadenceRaw = sorted.map((c, i) =>
       ),
 );
 const cadenceValues = cadenceRaw.slice(1);
-const cadenceLabels = sorted.slice(1).map((c) => c.checkpoint_id.slice(0, 8));
+const cadenceLabels = sorted.slice(1).map((c) => {
+  const d = new Date(c.commit_date);
+  return `${(d.getMonth()+1)}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+});
 
 // Metric 20: rolling average (window=3) time-series (lightweight-charts)
 const agentPcts = sorted.map((c) => c.agent_percentage);
@@ -94,6 +100,7 @@ const m20Series = sorted.map((c, i) => ({
 </div>
 
 <script>
+  import 'chartjs-adapter-date-fns';
   import { createChart, LineSeries } from 'lightweight-charts';
   import { Chart, registerables } from 'chart.js';
   import { CHART_COLORS } from '../lib/theme-constants';
@@ -140,11 +147,11 @@ const m20Series = sorted.map((c, i) => ({
           scales: {
             ...DARK_CHART_OPTIONS.scales,
             x: {
-              ...DARK_CHART_OPTIONS.scales.x,
-              ticks: {
-                ...DARK_CHART_OPTIONS.scales.x.ticks,
-                callback: (val) => new Date(val as number).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-              },
+              type: 'time',
+              time: { unit: 'hour', displayFormats: { hour: 'MMM d HH:mm' } },
+              grid: { color: 'rgba(255,255,255,0.03)' },
+              ticks: { color: '#a0a0b0', font: { family: 'Inter', size: 10 }, maxRotation: 45 },
+              border: { display: false },
             },
             y: {
               ...DARK_CHART_OPTIONS.scales.y,

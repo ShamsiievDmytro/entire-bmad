@@ -19,7 +19,13 @@ if (existsSync(cachePath)) {
   }
 }
 
-const checkpoints = cache?.checkpoints ?? [];
+// Filter out checkpoints with no session data (epoch dates / all-zero fields)
+const checkpoints = (cache?.checkpoints ?? []).filter(
+  (cp) => new Date(cp.commit_date).getFullYear() > 2000 && (cp.agent_lines > 0 || cp.human_added > 0 || cp.turns.length > 0),
+);
+const sortedCheckpoints = [...checkpoints].sort(
+  (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
+);
 const generatedAtDisplay = cache
   ? (() => {
       const d = new Date(cache.meta.generatedAt ?? '');
@@ -62,8 +68,21 @@ const generatedAtDisplay = cache
                 {generatedAtDisplay}
               </p>
             </div>
+            <div>
+              <p class="font-label text-text-muted text-xs">View</p>
+              <select id="checkpoint-selector" class="font-label text-text-primary text-sm bg-bg-card border border-white/10 rounded-lg px-2 py-1 cursor-pointer">
+                <option value="all">All Checkpoints</option>
+                {sortedCheckpoints.map((cp) => {
+                  const d = new Date(cp.commit_date);
+                  const label = `${cp.checkpoint_id.slice(0, 8)} — ${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+                  return <option value={cp.checkpoint_id}>{label}</option>;
+                })}
+              </select>
+            </div>
           </div>
         </div>
+
+        <div id="checkpoints-data" style="display:none" data-value={JSON.stringify(checkpoints)}></div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AiAttributionSection checkpoints={checkpoints} />
@@ -72,6 +91,26 @@ const generatedAtDisplay = cache
           <AiBehavioralSection checkpoints={checkpoints} />
           <AiTemporalSection checkpoints={checkpoints} />
         </div>
+
+        <script>
+          import { renderDashboard } from '../lib/utils/ai-dashboard-renderer';
+          import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+
+          const dataEl = document.getElementById('checkpoints-data');
+          if (dataEl) {
+            const allCheckpoints: CheckpointMeta[] = JSON.parse(dataEl.dataset.value!);
+            const selector = document.getElementById('checkpoint-selector') as HTMLSelectElement | null;
+            if (selector) {
+              selector.addEventListener('change', () => {
+                const val = selector.value;
+                const filtered = val === 'all'
+                  ? allCheckpoints
+                  : allCheckpoints.filter(cp => cp.checkpoint_id === val);
+                renderDashboard(filtered);
+              });
+            }
+          }
+        </script>
       </>
     )
   }

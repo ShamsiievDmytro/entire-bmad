@@ -22,9 +22,19 @@ export function buildHeaders(token?: string): Record<string, string> {
   return headers;
 }
 
-export function extractBmadCommands(jsonlContent: string): Record<string, number> {
-  const counts: Record<string, number> = {};
+export interface TranscriptExtraction {
+  bmad_commands: Record<string, number>;
+  models: Record<string, number>;
+  first_prompt: string;
+}
+
+export function extractTranscriptData(jsonlContent: string): TranscriptExtraction {
+  const bmad_commands: Record<string, number> = {};
+  const models: Record<string, number> = {};
+  let first_prompt = '';
+
   const commandRegex = /^\/[a-z][a-z0-9-]*/;
+  const commandTagRegex = /<command-name>(\/[a-z][a-z0-9-]*)<\/command-name>/;
 
   for (const line of jsonlContent.split('\n')) {
     if (!line.trim()) continue;
@@ -34,17 +44,53 @@ export function extractBmadCommands(jsonlContent: string): Record<string, number
     } catch {
       continue;
     }
-    if (!isRecord(parsed) || parsed['type'] !== 'user') continue;
+    if (!isRecord(parsed)) continue;
 
-    const content = getString(parsed, 'content') ?? getString(parsed, 'prompt') ?? '';
-    const trimmed = content.trimStart();
-    const match = commandRegex.exec(trimmed);
-    if (match) {
-      const cmd = match[0];
-      counts[cmd] = (counts[cmd] ?? 0) + 1;
+    const messageRaw = isRecord(parsed['message']) ? parsed['message'] : null;
+
+    // Extract model from assistant messages (at message.model)
+    if (parsed['type'] === 'assistant' && messageRaw) {
+      const model = getString(messageRaw, 'model');
+      if (model) {
+        models[model] = (models[model] ?? 0) + 1;
+      }
+    }
+
+    // Extract BMAD commands and first prompt from user messages
+    if (parsed['type'] === 'user') {
+      if (parsed['isMeta'] === true) continue;
+
+      const content =
+        (messageRaw ? getString(messageRaw, 'content') : null) ??
+        getString(parsed, 'content') ??
+        getString(parsed, 'prompt') ??
+        '';
+
+      // Capture first non-empty user prompt
+      if (!first_prompt && content.trim()) {
+        const tagMatch = /<command-name>(\/[^\s<]+)<\/command-name>/.exec(content);
+        first_prompt = tagMatch
+          ? tagMatch[1]
+          : content.trim().split('\n')[0]?.slice(0, PROMPT_TXT_MAX_LEN) ?? '';
+      }
+
+      // BMAD command extraction
+      const tagMatch = commandTagRegex.exec(content);
+      const cmd = tagMatch
+        ? tagMatch[1]
+        : commandRegex.exec(content.trimStart())?.[0];
+
+      if (cmd) {
+        bmad_commands[cmd] = (bmad_commands[cmd] ?? 0) + 1;
+      }
     }
   }
-  return counts;
+  return { bmad_commands, models, first_prompt };
+}
+
+// Backward-compatible wrapper
+export function extractBmadCommands(jsonlContent: string): Record<string, number> {
+  return extractTranscriptData(jsonlContent).bmad_commands;
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -193,18 +239,51 @@ export function parseMetadata(
   };
 }
 
-async function fetchAllCommits(headers: Record<string, string>): Promise<unknown[]> {
-  const all: unknown[] = [];
-  let page = 1;
-  while (true) {
-    const url = `${BASE_URL}/repos/${REPO}/commits?sha=${BRANCH_ENCODED}&per_page=100&page=${page}`;
-    const data = await fetchWithRetry(url, headers);
-    if (!Array.isArray(data) || data.length === 0) break;
-    all.push(...data);
-    if (data.length < 100) break;
-    page++;
-  }
-  return all;
+// Actual on-disk structure:
+//   <2-char>/<checkpoint-id>/metadata.json          — top-level: files_touched, sessions[]
+//   <2-char>/<checkpoint-id>/<n>/metadata.json      — per-session: token_usage, initial_attribution
+//   <2-char>/<checkpoint-id>/<n>/full.jsonl         — per-session transcript (for BMAD commands)
+
+function parseSessionMeta(raw: unknown): {
+  session_id: string;
+  turn_id: string;
+  created_at: string;
+  turn_count: number;
+  agent_percentage: number;
+  agent_lines: number;
+  human_added: number;
+  human_modified: number;
+  human_removed: number;
+  tokens: { input: number; cache_creation: number; cache_read: number; output: number };
+} {
+  const defaults = {
+    session_id: '', turn_id: '', created_at: '', turn_count: 0,
+    agent_percentage: 0, agent_lines: 0, human_added: 0, human_modified: 0, human_removed: 0,
+    tokens: { input: 0, cache_creation: 0, cache_read: 0, output: 0 },
+  };
+  if (!isRecord(raw)) return defaults;
+
+  const tokenRaw = isRecord(raw['token_usage']) ? raw['token_usage'] : {};
+  const attrRaw = isRecord(raw['initial_attribution']) ? raw['initial_attribution'] : {};
+  const metricsRaw = isRecord(raw['session_metrics']) ? raw['session_metrics'] : {};
+
+  return {
+    session_id: getString(raw, 'session_id') ?? '',
+    turn_id: getString(raw, 'turn_id') ?? '',
+    created_at: getString(raw, 'created_at') ?? '',
+    turn_count: getNumber(metricsRaw, 'turn_count'),
+    agent_percentage: getNumber(attrRaw, 'agent_percentage'),
+    agent_lines: getNumber(attrRaw, 'agent_lines'),
+    human_added: getNumber(attrRaw, 'human_added'),
+    human_modified: getNumber(attrRaw, 'human_modified'),
+    human_removed: getNumber(attrRaw, 'human_removed'),
+    tokens: {
+      input: getNumber(tokenRaw, 'input_tokens'),
+      cache_creation: getNumber(tokenRaw, 'cache_creation_tokens'),
+      cache_read: getNumber(tokenRaw, 'cache_read_tokens'),
+      output: getNumber(tokenRaw, 'output_tokens'),
+    },
+  };
 }
 
 async function run(): Promise<void> {
@@ -218,6 +297,7 @@ async function run(): Promise<void> {
   }
 
   // Step 1: Discover checkpoints via tree API
+  // Actual path pattern: <2-char>/<checkpoint-id>/metadata.json
   console.log('Step 1: Discovering checkpoints...');
   const treeUrl = `${BASE_URL}/repos/${REPO}/git/trees/${BRANCH_ENCODED}?recursive=1`;
   const treeData = await fetchWithRetry(treeUrl, headers);
@@ -228,64 +308,149 @@ async function run(): Promise<void> {
     console.warn('WARN: GitHub tree response is truncated — some checkpoints may be missing');
   }
 
+  // Top-level metadata: exactly 2 path segments, second segment is the checkpoint id
   const metadataPaths: Array<{ id: string; path: string }> = [];
   for (const item of treeData['tree']) {
     if (!isRecord(item) || typeof item['path'] !== 'string') continue;
-    const match = /^checkpoints\/([^/]+)\/metadata\.json$/.exec(item['path']);
+    const match = /^[0-9a-f]{2}\/([0-9a-f]+)\/metadata\.json$/.exec(item['path']);
     if (match) {
       metadataPaths.push({ id: match[1], path: item['path'] });
     }
   }
   console.log(`  Found ${metadataPaths.length} checkpoints`);
 
-  // Step 2: Fetch commit list to map checkpoint → commit_date
-  console.log('Step 2: Fetching commit list...');
-  const commitsData = await fetchAllCommits(headers);
-  const commitDateMap = new Map<string, string>();
-
-  for (const commit of commitsData) {
-    if (!isRecord(commit)) continue;
-    const message = isRecord(commit['commit']) ? getString(commit['commit'] as Record<string, unknown>, 'message') ?? '' : '';
-    const dateStr = isRecord(commit['commit'])
-      ? (isRecord((commit['commit'] as Record<string, unknown>)['author'])
-          ? getString((commit['commit'] as Record<string, unknown>)['author'] as Record<string, unknown>, 'date')
-          : undefined)
-      : undefined;
-    // Try to extract checkpoint ID from commit message
-    const cpMatch = /checkpoint[:\s]+([a-zA-Z0-9_-]+)/i.exec(message);
-    if (cpMatch && dateStr) {
-      commitDateMap.set(cpMatch[1], dateStr);
+  // Build a map of all per-session paths keyed by checkpoint id prefix (<2-char>/<id>)
+  const sessionMetaPaths = new Map<string, string[]>();   // prefix → session metadata paths
+  const sessionJsonlPaths = new Map<string, string[]>();  // prefix → session full.jsonl paths
+  for (const item of treeData['tree']) {
+    if (!isRecord(item) || typeof item['path'] !== 'string') continue;
+    const metaMatch = /^([0-9a-f]{2}\/[0-9a-f]+)\/\d+\/metadata\.json$/.exec(item['path']);
+    if (metaMatch) {
+      const key = metaMatch[1];
+      const arr = sessionMetaPaths.get(key) ?? [];
+      arr.push(item['path']);
+      sessionMetaPaths.set(key, arr);
+    }
+    const jsonlMatch = /^([0-9a-f]{2}\/[0-9a-f]+)\/\d+\/full\.jsonl$/.exec(item['path']);
+    if (jsonlMatch) {
+      const key = jsonlMatch[1];
+      const arr = sessionJsonlPaths.get(key) ?? [];
+      arr.push(item['path']);
+      sessionJsonlPaths.set(key, arr);
     }
   }
 
-  // Step 3 & 4: Fetch each checkpoint's metadata.json and full.jsonl
-  console.log('Step 3/4: Fetching checkpoint data...');
+  // Step 2: Fetch each checkpoint's data
+  console.log('Step 2: Fetching checkpoint data...');
   const checkpoints: CheckpointMeta[] = [];
 
   for (const { id, path } of metadataPaths) {
     let checkpoint: CheckpointMeta;
+    // Derive the path prefix used as key (e.g. "01/60328b41c7")
+    const prefix = path.replace(/\/metadata\.json$/, '');
 
     try {
-      const metadataText = await fetchContent(path, headers);
-      const rawMeta = JSON.parse(metadataText) as unknown;
-      const commitDate = commitDateMap.get(id) ?? new Date(0).toISOString();
-      const base = parseMetadata(rawMeta, id, commitDate);
+      // Read top-level metadata for files_touched and sessions list
+      const topMetaText = await fetchContent(path, headers);
+      const topMeta = JSON.parse(topMetaText) as unknown;
+      const checkpointId = isRecord(topMeta) ? (getString(topMeta, 'checkpoint_id') ?? id) : id;
+      const filesTouchedRaw = isRecord(topMeta) ? getArray(topMeta, 'files_touched') : [];
+      const files_touched = filesTouchedRaw.filter((x): x is string => typeof x === 'string');
 
-      // Step 4: heavy tier — fetch full.jsonl for BMAD command extraction
-      let bmad_commands: Record<string, number> = {};
-      try {
-        const jsonlPath = path.replace(/metadata\.json$/, 'full.jsonl');
-        const jsonlText = await fetchContent(jsonlPath, headers);
-        bmad_commands = extractBmadCommands(jsonlText);
-      } catch {
-        // Heavy tier failure is silent — bmad_commands stays empty
+      // Read all per-session metadata files and aggregate
+      const sessionPaths = sessionMetaPaths.get(prefix) ?? [];
+      const sessions: ReturnType<typeof parseSessionMeta>[] = [];
+      for (const sp of sessionPaths) {
+        try {
+          const text = await fetchContent(sp, headers);
+          sessions.push(parseSessionMeta(JSON.parse(text) as unknown));
+        } catch {
+          // skip failed sessions
+        }
       }
 
-      checkpoint = { ...base, bmad_commands, fetch_failed: false };
+      // commit_date: earliest created_at across sessions
+      const dates = sessions.map((s) => s.created_at).filter(Boolean).sort();
+      const commit_date = dates[0] ?? new Date(0).toISOString();
+
+      // Attribution: use session with highest agent_percentage (peak agent contribution).
+      // initial_attribution is a cumulative repo snapshot — later sessions may reflect
+      // human reclassification of agent code, so the peak best represents what the agent produced.
+      const bestSession = sessions.reduce((best, s) =>
+        s.agent_percentage > (best?.agent_percentage ?? -1) ? s : best, sessions[0]);
+      const total_lines = (bestSession?.agent_lines ?? 0) + (bestSession?.human_added ?? 0);
+      const agent_percentage = bestSession?.agent_percentage ?? 0;
+      const agent_lines = bestSession?.agent_lines ?? 0;
+      const human_added = bestSession?.human_added ?? 0;
+      const human_modified = bestSession?.human_modified ?? 0;
+      const human_removed = bestSession?.human_removed ?? 0;
+
+      // Tokens: sum across all sessions
+      const tokens = sessions.reduce(
+        (acc, s) => ({
+          input: acc.input + s.tokens.input,
+          cache_creation: acc.cache_creation + s.tokens.cache_creation,
+          cache_read: acc.cache_read + s.tokens.cache_read,
+          output: acc.output + s.tokens.output,
+        }),
+        { input: 0, cache_creation: 0, cache_read: 0, output: 0 },
+      );
+
+      // Extract transcript data (BMAD commands, model, prompt) from each session's full.jsonl
+      // Build a map from session index → extraction, keyed by jsonl path order
+      const jsonlPaths = (sessionJsonlPaths.get(prefix) ?? []).sort();
+      const sessionExtractions: TranscriptExtraction[] = [];
+      let bmad_commands: Record<string, number> = {};
+      for (const jp of jsonlPaths) {
+        try {
+          const jsonlText = await fetchContent(jp, headers);
+          const extraction = extractTranscriptData(jsonlText);
+          sessionExtractions.push(extraction);
+          for (const [cmd, count] of Object.entries(extraction.bmad_commands)) {
+            bmad_commands[cmd] = (bmad_commands[cmd] ?? 0) + count;
+          }
+        } catch {
+          sessionExtractions.push({ bmad_commands: {}, models: {}, first_prompt: '' });
+        }
+      }
+
+      // Turns: one entry per session, enriched with model/prompt from transcript
+      const turns: TurnMeta[] = sessions.map((s, i) => {
+        const ext = sessionExtractions[i];
+        // Pick the most-used model in this session's transcript
+        const topModel = ext
+          ? Object.entries(ext.models).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+          : '';
+        return {
+          turn_id: s.turn_id,
+          session_id: s.session_id,
+          model: topModel,
+          prompt_txt: ext?.first_prompt ?? '',
+          turn_count: s.turn_count,
+          agent_percentage: s.agent_percentage,
+        };
+      });
+
+      checkpoint = {
+        checkpoint_id: checkpointId,
+        commit_date,
+        agent_percentage,
+        agent_lines,
+        human_added,
+        human_modified,
+        human_removed,
+        tokens,
+        summary: { friction: [], open_items: [] },
+        learnings: { repo: 0, code: 0, workflow: 0 },
+        files_touched,
+        turns,
+        bmad_commands,
+        fetch_failed: false,
+      };
     } catch {
       checkpoint = {
         checkpoint_id: id,
-        commit_date: commitDateMap.get(id) ?? new Date(0).toISOString(),
+        commit_date: new Date(0).toISOString(),
         agent_percentage: 0,
         agent_lines: 0,
         human_added: 0,
@@ -302,7 +467,7 @@ async function run(): Promise<void> {
     }
 
     checkpoints.push(checkpoint);
-    process.stdout.write(`  [${checkpoints.length}/${metadataPaths.length}] ${id}\n`);
+    process.stdout.write(`  [${checkpoints.length}/${metadataPaths.length}] ${checkpoint.checkpoint_id}\n`);
   }
 
   const cache: CheckpointsCache = {

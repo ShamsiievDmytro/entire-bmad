@@ -15,7 +15,10 @@ const { checkpoints } = Astro.props;
 const sorted = [...checkpoints].sort(
   (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
 );
-const labels = sorted.map((c) => c.checkpoint_id.slice(0, 8));
+const labels = sorted.map((c) => {
+  const d = new Date(c.commit_date);
+  return `${(d.getMonth()+1)}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+});
 
 // Metric 14: BMAD command frequency (horizontal bar)
 const bmadAgg = aggregateBmadCommands(checkpoints);
@@ -146,11 +149,21 @@ const m17Values = sorted.map((c) => uniqueSessionCount(c));
           datasets: [{ data: values, backgroundColor: '#8b5cf6', borderRadius: 3 }],
         },
         options: {
-          ...DARK_CHART_OPTIONS,
+          responsive: true,
+          maintainAspectRatio: false,
           indexAxis: 'y' as const,
+          plugins: DARK_CHART_OPTIONS.plugins,
           scales: {
-            x: { ...DARK_CHART_OPTIONS.scales.x },
-            y: { ...DARK_CHART_OPTIONS.scales.y, ticks: { ...DARK_CHART_OPTIONS.scales.y.ticks, font: { family: 'Inter', size: 10 } } },
+            x: {
+              grid: { color: 'rgba(255,255,255,0.03)' },
+              ticks: { color: '#a0a0b0', font: { family: 'Inter', size: 11 } },
+              border: { display: false },
+            },
+            y: {
+              ticks: { color: '#a0a0b0', font: { family: 'Inter', size: 10 } },
+              grid: { display: false },
+              border: { display: false },
+            },
           },
         },
       });
@@ -163,7 +176,9 @@ const m17Values = sorted.map((c) => uniqueSessionCount(c));
     const labels: string[] = JSON.parse(m15Canvas.dataset.labels ?? '[]');
     const values: number[] = JSON.parse(m15Canvas.dataset.values ?? '[]');
     const total = values.reduce((a, b) => a + b, 0);
-    if (!total) {
+    // If only "Continuation" has values (index 2), prompt_txt data is missing
+    const hasRealPrompts = values[0] > 0 || values[1] > 0;
+    if (!total || !hasRealPrompts) {
       const p15 = m15Canvas.parentElement;
       if (p15) p15.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#606070;font-family:Inter,sans-serif;font-size:14px">No data available</div>';
     } else {

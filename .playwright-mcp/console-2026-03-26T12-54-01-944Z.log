@@ -1,0 +1,27 @@
+[      43ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  527124ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  541903ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  550138ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  550263ms] Error: This method is not implemented: Check that a complete date adapter is provided.
+    at abstract (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:5553:9)
+    at _DateAdapterBase.formats (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:5577:12)
+    at TimeScale.init (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:14099:42)
+    at http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:8769:13
+    at each (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:609:12)
+    at Chart.buildOrUpdateScales (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:8747:5)
+    at Chart._updateScales (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:8899:10)
+    at Chart.update (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:8855:10)
+    at Chart.<anonymous> (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:8624:46)
+    at Chart._doResize (http://localhost:4322/node_modules/.vite/deps/chart__js.js?v=ce4cdb98:1009:10)
+[  569667ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:4322/@id/astro/runtime/client/dev-toolbar/entrypoint.js:0
+[  569673ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:4322/src/styles/global.css:0
+[  569673ms] [ERROR] WebSocket connection to 'ws://localhost:4322/?token=fHLOvC_awqXt' failed: Error during WebSocket handshake: net::ERR_CONNECTION_RESET @ http://localhost:4322/@vite/client:1476
+[  569674ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4322/src/lib/theme-constants.ts:0
+[  569674ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4322/src/lib/utils/ai-metrics-utils.ts:0
+[  569674ms] [ERROR] WebSocket connection to 'ws://localhost:5173/?token=fHLOvC_awqXt' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:4322/@vite/client:1486
+[  569674ms] [ERROR] [vite] failed to connect to websocket.
+your current setup:
+  (browser) localhost:4322/ <--[HTTP]--> localhost:5173/ (server)
+  (browser) localhost:4322/ <--[WebSocket (failing)]--> localhost:5173/ (server)
+Check out your Vite / network configuration and https://vite.dev/config/server-options.html#server-hmr . @ http://localhost:4322/@vite/client:1496
+[  569676ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:4322/favicon.ico:0

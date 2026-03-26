@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   buildHeaders,
   extractBmadCommands,
+  extractTranscriptData,
   fetchWithRetry,
   parseMetadata,
 } from './fetch-checkpoints.js';
@@ -29,7 +30,31 @@ describe('buildHeaders', () => {
 // ─── extractBmadCommands ─────────────────────────────────────────────────────
 
 describe('extractBmadCommands', () => {
-  it('counts slash commands from user-type lines', () => {
+  // Real Claude Code JSONL format: command in <command-name> tag inside message.content
+  it('extracts commands from <command-name> tag in message.content (real format)', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-message>bmad-dev-story</command-message>\n<command-name>/bmad-dev-story</command-name>\n<command-args>story.md</command-args>' } }),
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: 'response' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-name>/bmad-dev-story</command-name>' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-name>/bmad-code-review</command-name>' } }),
+    ].join('\n');
+
+    const result = extractBmadCommands(jsonl);
+    expect(result['/bmad-dev-story']).toBe(2);
+    expect(result['/bmad-code-review']).toBe(1);
+  });
+
+  it('ignores <command-name> tags in assistant messages', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', content: '<command-name>/bmad-dev-story</command-name>' } }),
+    ].join('\n');
+
+    const result = extractBmadCommands(jsonl);
+    expect(Object.keys(result)).toHaveLength(0);
+  });
+
+  // Legacy / flat format fallback
+  it('counts slash commands from flat content field (legacy format)', () => {
     const jsonl = [
       JSON.stringify({ type: 'user', content: '/bmad-dev-story implement epic 2' }),
       JSON.stringify({ type: 'assistant', content: '/bmad-dev-story should be ignored' }),
@@ -44,7 +69,7 @@ describe('extractBmadCommands', () => {
 
   it('ignores non-command user lines', () => {
     const jsonl = [
-      JSON.stringify({ type: 'user', content: 'just a regular message' }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'just a regular message' } }),
       JSON.stringify({ type: 'user', content: 'another message without slash' }),
     ].join('\n');
 
@@ -66,6 +91,63 @@ describe('extractBmadCommands', () => {
 
   it('returns empty object for empty input', () => {
     expect(extractBmadCommands('')).toEqual({});
+  });
+});
+
+// ─── extractTranscriptData ───────────────────────────────────────────────────
+
+describe('extractTranscriptData', () => {
+  it('extracts model from assistant messages at message.model', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', model: 'claude-sonnet-4-6', content: 'hi' } }),
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', model: 'claude-sonnet-4-6', content: 'ok' } }),
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', model: 'claude-opus-4-6', content: 'done' } }),
+    ].join('\n');
+
+    const result = extractTranscriptData(jsonl);
+    expect(result.models['claude-sonnet-4-6']).toBe(2);
+    expect(result.models['claude-opus-4-6']).toBe(1);
+  });
+
+  it('extracts first non-meta user prompt from command-name tag', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'user', isMeta: true, message: { role: 'user', content: 'system stuff' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-name>/bmad-dev-story</command-name>\n<command-args>file.md</command-args>' } }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'second prompt' } }),
+    ].join('\n');
+
+    const result = extractTranscriptData(jsonl);
+    expect(result.first_prompt).toBe('/bmad-dev-story');
+  });
+
+  it('extracts first non-meta user prompt from plain text', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Fix the login bug\nmore details here' } }),
+    ].join('\n');
+
+    const result = extractTranscriptData(jsonl);
+    expect(result.first_prompt).toBe('Fix the login bug');
+  });
+
+  it('returns bmad_commands, models, and first_prompt together', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-name>/bmad-code-review</command-name>' } }),
+      JSON.stringify({ type: 'assistant', message: { role: 'assistant', model: 'claude-opus-4-6', content: 'reviewing' } }),
+    ].join('\n');
+
+    const result = extractTranscriptData(jsonl);
+    expect(result.bmad_commands['/bmad-code-review']).toBe(1);
+    expect(result.models['claude-opus-4-6']).toBe(1);
+    expect(result.first_prompt).toBe('/bmad-code-review');
+  });
+
+  it('skips isMeta user messages for first_prompt', () => {
+    const jsonl = [
+      JSON.stringify({ type: 'user', isMeta: true, message: { role: 'user', content: 'meta content' } }),
+    ].join('\n');
+
+    const result = extractTranscriptData(jsonl);
+    expect(result.first_prompt).toBe('');
   });
 });
 
