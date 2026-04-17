@@ -1,0 +1,2 @@
+<ide_opened_file>The user opened the file /Users/dmytroshamsiiev/Projects/metrics/_bmad/wds/data/design-system/figma-component-structure.md in the IDE. This may or may not be related to the current task.</ide_opened_file>
+Please add menu to the pages where we have link to the home page and metrics page
