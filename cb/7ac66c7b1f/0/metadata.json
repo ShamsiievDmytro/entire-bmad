@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "cb7ac66c7b1f",
+  "session_id": "2ccaa0bf-9619-49f6-ac5a-8eea9800bb93",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-17T13:29:39.553435Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "ai-metrics-final-v2.png",
+    "ai-metrics-final.png",
+    "ai-metrics-fixed.png",
+    "ai-metrics-full.png",
+    "ai-metrics-real-data.png",
+    "single-checkpoint.png"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "5e5956747494",
+  "checkpoint_transcript_start": 56,
+  "transcript_lines_at_start": 56,
+  "token_usage": {
+    "input_tokens": 1,
+    "cache_creation_tokens": 364,
+    "cache_read_tokens": 37828,
+    "output_tokens": 11,
+    "api_call_count": 1
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "summary": {
+    "intent": "Commit a set of image files (AI metrics screenshots or charts) to the repository.",
+    "outcome": "Six image files were successfully committed with commit hash 25606ea.",
+    "learnings": {
+      "repo": [],
+      "code": [],
+      "workflow": []
+    },
+    "friction": [],
+    "open_items": [
+      "Multiple versioned variants of the same chart exist (ai-metrics-final-v2.png, ai-metrics-final.png, ai-metrics-fixed.png, ai-metrics-full.png, ai-metrics-real-data.png) — older versions may need cleanup."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-17T13:29:31.602649Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "total_lines_changed": 0,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

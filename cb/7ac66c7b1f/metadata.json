@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "cb7ac66c7b1f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "ai-metrics-final-v2.png",
+    "ai-metrics-final.png",
+    "ai-metrics-fixed.png",
+    "ai-metrics-full.png",
+    "ai-metrics-real-data.png",
+    "single-checkpoint.png"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cb/7ac66c7b1f/0/metadata.json",
+      "transcript": "/cb/7ac66c7b1f/0/full.jsonl",
+      "content_hash": "/cb/7ac66c7b1f/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1,
+    "cache_creation_tokens": 364,
+    "cache_read_tokens": 37828,
+    "output_tokens": 11,
+    "api_call_count": 1
+  }
+}
