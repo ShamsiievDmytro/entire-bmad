@@ -130,17 +130,18 @@ const source = getCheckpointSource();
 
     let allCheckpoints: CheckpointMeta[] = dataEl ? JSON.parse(dataEl.dataset.value ?? '[]') : [];
 
+    const byCommitDate = (a: CheckpointMeta, b: CheckpointMeta) =>
+      new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime();
+
+    const toneClasses = {
+      success: 'text-status-live',
+      error: 'text-status-stale',
+      muted: 'text-text-muted',
+    } as const;
+
     function setStatus(message: string, tone: 'muted' | 'success' | 'error' = 'muted') {
       if (!statusEl) return;
-
-      const toneClass =
-        tone === 'success'
-          ? 'text-status-live'
-          : tone === 'error'
-            ? 'text-status-stale'
-            : 'text-text-muted';
-
-      statusEl.className = `font-label text-xs ${toneClass}`;
+      statusEl.className = `font-label text-xs ${toneClasses[tone]}`;
       statusEl.textContent = message;
     }
 
@@ -155,24 +156,24 @@ const source = getCheckpointSource();
     function syncSelector(selectedValue: string) {
       if (!selector) return;
 
-      selector.innerHTML = '';
+      const fragment = document.createDocumentFragment();
 
       const allOption = document.createElement('option');
       allOption.value = 'all';
       allOption.textContent = 'All Checkpoints';
-      selector.appendChild(allOption);
+      fragment.appendChild(allOption);
 
-      for (const checkpoint of [...allCheckpoints].sort(
-        (left, right) => new Date(left.commit_date).getTime() - new Date(right.commit_date).getTime(),
-      )) {
+      for (const checkpoint of [...allCheckpoints].sort(byCommitDate)) {
         const option = document.createElement('option');
         option.value = checkpoint.checkpoint_id;
         option.textContent = formatCheckpointOptionLabel(checkpoint);
-        selector.appendChild(option);
+        fragment.appendChild(option);
       }
 
+      selector.replaceChildren(fragment);
+
       const nextValue =
-        selectedValue !== 'all' && allCheckpoints.some((checkpoint) => checkpoint.checkpoint_id === selectedValue)
+        selectedValue !== 'all' && allCheckpoints.some((cp) => cp.checkpoint_id === selectedValue)
           ? selectedValue
           : 'all';
 
