@@ -4,6 +4,7 @@ import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import '@fontsource/jetbrains-mono/600.css';
 import '@fontsource/inter/400.css';
+import Nav from '../components/Nav.astro';
 ---
 <html lang="en" style="background-color: #0a0a0f" class="bg-bg-base">
   <head>
@@ -11,10 +12,13 @@ import '@fontsource/inter/400.css';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Metrics</title>
   </head>
-  <body class="min-h-dvh flex items-start sm:items-center justify-center px-4 sm:px-8 py-6 sm:py-12">
-    <main class="w-full max-w-[720px] grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-6">
-      <slot />
-    </main>
+  <body class="min-h-dvh flex flex-col items-center px-4 sm:px-8 py-6 sm:py-12">
+    <div class="w-full max-w-[720px]">
+      <Nav />
+      <main class="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-6">
+        <slot />
+      </main>
+    </div>
     <script>
       import { ConnectionManager } from '../lib/services/connection-manager';
       import { MarketDataService } from '../lib/services/market-data-service';

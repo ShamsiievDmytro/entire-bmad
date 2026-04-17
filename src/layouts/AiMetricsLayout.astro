@@ -6,6 +6,7 @@ import '@fontsource/jetbrains-mono/600.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
+import Nav from '../components/Nav.astro';
 ---
 
 <html lang="en" style="background-color: #0a0a0f" class="bg-bg-base">
@@ -15,8 +16,11 @@ import '@fontsource/inter/600.css';
     <title>AI Metrics — Metrics</title>
   </head>
   <body class="min-h-dvh px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-    <main class="w-full max-w-[1280px] mx-auto">
-      <slot />
-    </main>
+    <div class="w-full max-w-[1280px] mx-auto">
+      <Nav />
+      <main>
+        <slot />
+      </main>
+    </div>
   </body>
 </html>
