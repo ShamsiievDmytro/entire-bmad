@@ -1,0 +1,5 @@
+how are you ?
+
+---
+
+could you please review and refactor /Users/dmytroshamsiiev/Projects/metrics/src/pages/ai-metrics.astro
