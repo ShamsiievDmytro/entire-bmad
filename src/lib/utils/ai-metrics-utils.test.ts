@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
+  filterRenderableCheckpoints,
   computeRollingAverage,
   classifyPromptType,
   classifyFileLayer,
   computeCheckpointCadenceMinutes,
   aggregateBmadCommands,
+  formatCheckpointOptionLabel,
+  formatGeneratedAt,
+  isRenderableCheckpoint,
   uniqueSessionCount,
 } from './ai-metrics-utils';
 import type { CheckpointMeta } from './ai-metrics-utils';
@@ -47,6 +51,39 @@ describe('computeRollingAverage', () => {
   it('handles window larger than array', () => {
     // window=5 on [10,20]: i=0 → 10; i=1 → 15
     expect(computeRollingAverage([10, 20], 5)).toEqual([10, 15]);
+  });
+});
+
+describe('checkpoint display helpers', () => {
+  it('treats populated checkpoints as renderable', () => {
+    const checkpoint = makeCheckpoint({
+      commit_date: '2026-01-01T00:00:00Z',
+      agent_lines: 10,
+    });
+
+    expect(isRenderableCheckpoint(checkpoint)).toBe(true);
+  });
+
+  it('filters checkpoints with epoch dates and no session data', () => {
+    const visible = makeCheckpoint({ commit_date: '2026-01-01T00:00:00Z', agent_lines: 10 });
+    const hidden = makeCheckpoint({ commit_date: '1970-01-01T00:00:00.000Z', agent_lines: 0, turns: [] });
+
+    expect(filterRenderableCheckpoints([visible, hidden])).toEqual([visible]);
+  });
+
+  it('formats generated timestamps for display', () => {
+    expect(formatGeneratedAt('2026-01-01T00:00:00Z')).not.toBe('Unknown');
+    expect(formatGeneratedAt('not-a-date')).toBe('Unknown');
+    expect(formatGeneratedAt()).toBe('Not loaded yet');
+  });
+
+  it('formats selector labels from checkpoint ids and commit dates', () => {
+    const checkpoint = makeCheckpoint({
+      checkpoint_id: 'abcdef1234567890',
+      commit_date: '2026-01-02T03:04:00Z',
+    });
+
+    expect(formatCheckpointOptionLabel(checkpoint)).toContain('abcdef12');
   });
 });
 

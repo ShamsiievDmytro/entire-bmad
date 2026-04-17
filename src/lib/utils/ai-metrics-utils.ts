@@ -38,6 +38,28 @@ export function computeRollingAverage(values: number[], window: number): number[
   });
 }
 
+export function isRenderableCheckpoint(checkpoint: CheckpointMeta): boolean {
+  return (
+    new Date(checkpoint.commit_date).getFullYear() > 2000 &&
+    (checkpoint.agent_lines > 0 || checkpoint.human_added > 0 || checkpoint.turns.length > 0)
+  );
+}
+
+export function filterRenderableCheckpoints(checkpoints: CheckpointMeta[]): CheckpointMeta[] {
+  return checkpoints.filter(isRenderableCheckpoint);
+}
+
+export function formatGeneratedAt(generatedAt?: string): string {
+  if (!generatedAt) return 'Not loaded yet';
+  const date = new Date(generatedAt);
+  return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString();
+}
+
+export function formatCheckpointOptionLabel(checkpoint: CheckpointMeta): string {
+  const date = new Date(checkpoint.commit_date);
+  return `${checkpoint.checkpoint_id.slice(0, 8)} — ${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
 export function classifyPromptType(promptTxt: string): 'Slash Command' | 'Free-form' | 'Continuation' {
   const trimmed = (promptTxt ?? '').trim();
   if (trimmed === '') return 'Continuation';

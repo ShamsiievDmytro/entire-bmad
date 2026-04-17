@@ -8,6 +8,12 @@ import AiQualitySection from '../components/AiQualitySection.astro';
 import AiBehavioralSection from '../components/AiBehavioralSection.astro';
 import AiTemporalSection from '../components/AiTemporalSection.astro';
 import type { CheckpointsCache } from '../lib/utils/ai-metrics-utils';
+import {
+  filterRenderableCheckpoints,
+  formatCheckpointOptionLabel,
+  formatGeneratedAt,
+} from '../lib/utils/ai-metrics-utils';
+import { getCheckpointSource } from '../lib/utils/github-checkpoints';
 
 const cachePath = resolve('./src/data/checkpoints-cache.json');
 let cache: CheckpointsCache | null = null;
@@ -19,99 +25,208 @@ if (existsSync(cachePath)) {
   }
 }
 
-// Filter out checkpoints with no session data (epoch dates / all-zero fields)
-const checkpoints = (cache?.checkpoints ?? []).filter(
-  (cp) => new Date(cp.commit_date).getFullYear() > 2000 && (cp.agent_lines > 0 || cp.human_added > 0 || cp.turns.length > 0),
-);
+const checkpoints = filterRenderableCheckpoints(cache?.checkpoints ?? []);
 const sortedCheckpoints = [...checkpoints].sort(
   (a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime(),
 );
-const generatedAtDisplay = cache
-  ? (() => {
-      const d = new Date(cache.meta.generatedAt ?? '');
-      return isNaN(d.getTime()) ? 'Unknown' : d.toLocaleString();
-    })()
-  : '';
+const generatedAtDisplay = formatGeneratedAt(cache?.meta.generatedAt);
+const source = getCheckpointSource();
 ---
 
 <AiMetricsLayout>
-  {
-    cache === null ? (
-      <div class="card-glass p-8 text-center">
-        <p class="font-label text-text-primary font-semibold text-lg mb-2">Cache missing</p>
-        <p class="font-label text-text-secondary text-sm mb-4">
-          The checkpoints cache file is not present. Run the fetch script to populate it.
-        </p>
-        <code class="font-price text-accent-primary text-sm bg-bg-card px-3 py-1 rounded-lg border border-white/10">
-          npm run fetch-checkpoints
-        </code>
+  <div class="card-glass p-4 mb-8">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div>
+          <p class="font-label text-text-muted text-xs">Repository</p>
+          <p id="metrics-repo" class="font-label text-accent-primary text-sm font-medium">
+            {cache?.meta.repo ?? source.repo}
+          </p>
+        </div>
+        <div>
+          <p class="font-label text-text-muted text-xs">Branch</p>
+          <p id="metrics-branch" class="font-label text-text-secondary text-sm">
+            {cache?.meta.branch ?? source.branch}
+          </p>
+        </div>
+        <div>
+          <p class="font-label text-text-muted text-xs">Checkpoints</p>
+          <p id="metrics-checkpoint-count" class="font-label text-text-primary text-sm font-semibold">
+            {cache?.meta.checkpointCount ?? 0}
+          </p>
+        </div>
+        <div class="min-w-[12rem]">
+          <p class="font-label text-text-muted text-xs">Generated</p>
+          <p id="metrics-generated" class="font-label text-text-secondary text-sm">
+            {generatedAtDisplay}
+          </p>
+        </div>
+        <div>
+          <p class="font-label text-text-muted text-xs">View</p>
+          <select
+            id="checkpoint-selector"
+            class="font-label text-text-primary text-sm bg-bg-card border border-white/10 rounded-lg px-2 py-1 cursor-pointer disabled:cursor-not-allowed disabled:text-text-muted"
+            disabled={sortedCheckpoints.length === 0}
+          >
+            <option value="all">All Checkpoints</option>
+            {sortedCheckpoints.map((checkpoint) => (
+              <option value={checkpoint.checkpoint_id}>{formatCheckpointOptionLabel(checkpoint)}</option>
+            ))}
+          </select>
+        </div>
       </div>
-    ) : (
-      <>
-        <div class="card-glass p-4 mb-8">
-          <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <div>
-              <p class="font-label text-text-muted text-xs">Repository</p>
-              <p class="font-label text-accent-primary text-sm font-medium">{cache.meta.repo}</p>
-            </div>
-            <div>
-              <p class="font-label text-text-muted text-xs">Branch</p>
-              <p class="font-label text-text-secondary text-sm">{cache.meta.branch}</p>
-            </div>
-            <div>
-              <p class="font-label text-text-muted text-xs">Checkpoints</p>
-              <p class="font-label text-text-primary text-sm font-semibold">{cache.meta.checkpointCount}</p>
-            </div>
-            <div>
-              <p class="font-label text-text-muted text-xs">Generated</p>
-              <p class="font-label text-text-secondary text-sm">
-                {generatedAtDisplay}
-              </p>
-            </div>
-            <div>
-              <p class="font-label text-text-muted text-xs">View</p>
-              <select id="checkpoint-selector" class="font-label text-text-primary text-sm bg-bg-card border border-white/10 rounded-lg px-2 py-1 cursor-pointer">
-                <option value="all">All Checkpoints</option>
-                {sortedCheckpoints.map((cp) => {
-                  const d = new Date(cp.commit_date);
-                  const label = `${cp.checkpoint_id.slice(0, 8)} — ${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-                  return <option value={cp.checkpoint_id}>{label}</option>;
-                })}
-              </select>
-            </div>
-          </div>
-        </div>
 
-        <div id="checkpoints-data" style="display:none" data-value={JSON.stringify(checkpoints)}></div>
+      <button
+        id="refresh-metrics-button"
+        type="button"
+        class="font-label inline-flex items-center justify-center rounded-lg border border-accent-primary/30 bg-accent-primary/10 px-4 py-2 text-sm font-medium text-accent-primary transition hover:bg-accent-primary/15 disabled:cursor-wait disabled:opacity-60"
+      >
+        Refresh From GitHub
+      </button>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AiAttributionSection checkpoints={checkpoints} />
-          <AiTokenSection checkpoints={checkpoints} />
-          <AiQualitySection checkpoints={checkpoints} />
-          <AiBehavioralSection checkpoints={checkpoints} />
-          <AiTemporalSection checkpoints={checkpoints} />
-        </div>
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <p id="metrics-refresh-status" class="font-label text-text-muted text-xs">
+        {
+          cache === null
+            ? 'No cached checkpoint snapshot is loaded. Use the refresh button to fetch data directly from GitHub.'
+            : 'Dashboard is showing the cached checkpoint snapshot until you refresh.'
+        }
+      </p>
+      <p class="font-label text-text-muted text-xs">
+        GitHub API limit is 60 requests per hour when used without a token.
+      </p>
+    </div>
+  </div>
 
-        <script>
-          import { renderDashboard } from '../lib/utils/ai-dashboard-renderer';
-          import type { CheckpointMeta } from '../lib/utils/ai-metrics-utils';
+  <div id="checkpoints-data" style="display:none" data-value={JSON.stringify(checkpoints)}></div>
 
-          const dataEl = document.getElementById('checkpoints-data');
-          if (dataEl) {
-            const allCheckpoints: CheckpointMeta[] = JSON.parse(dataEl.dataset.value!);
-            const selector = document.getElementById('checkpoint-selector') as HTMLSelectElement | null;
-            if (selector) {
-              selector.addEventListener('change', () => {
-                const val = selector.value;
-                const filtered = val === 'all'
-                  ? allCheckpoints
-                  : allCheckpoints.filter(cp => cp.checkpoint_id === val);
-                renderDashboard(filtered);
-              });
-            }
-          }
-        </script>
-      </>
-    )
-  }
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <AiAttributionSection checkpoints={checkpoints} />
+    <AiTokenSection checkpoints={checkpoints} />
+    <AiQualitySection checkpoints={checkpoints} />
+    <AiBehavioralSection checkpoints={checkpoints} />
+    <AiTemporalSection checkpoints={checkpoints} />
+  </div>
+
+  <script>
+    import { renderDashboard } from '../lib/utils/ai-dashboard-renderer';
+    import { fetchCheckpointsCache } from '../lib/utils/github-checkpoints';
+    import {
+      filterRenderableCheckpoints,
+      formatCheckpointOptionLabel,
+      formatGeneratedAt,
+    } from '../lib/utils/ai-metrics-utils';
+    import type { CheckpointMeta, CheckpointsCache } from '../lib/utils/ai-metrics-utils';
+
+    const dataEl = document.getElementById('checkpoints-data');
+    const selector = document.getElementById('checkpoint-selector') as HTMLSelectElement | null;
+    const refreshButton = document.getElementById('refresh-metrics-button') as HTMLButtonElement | null;
+    const statusEl = document.getElementById('metrics-refresh-status');
+    const repoEl = document.getElementById('metrics-repo');
+    const branchEl = document.getElementById('metrics-branch');
+    const countEl = document.getElementById('metrics-checkpoint-count');
+    const generatedEl = document.getElementById('metrics-generated');
+
+    let allCheckpoints: CheckpointMeta[] = dataEl ? JSON.parse(dataEl.dataset.value ?? '[]') : [];
+
+    function setStatus(message: string, tone: 'muted' | 'success' | 'error' = 'muted') {
+      if (!statusEl) return;
+
+      const toneClass =
+        tone === 'success'
+          ? 'text-status-live'
+          : tone === 'error'
+            ? 'text-status-stale'
+            : 'text-text-muted';
+
+      statusEl.className = `font-label text-xs ${toneClass}`;
+      statusEl.textContent = message;
+    }
+
+    function getSelectedCheckpoints(): CheckpointMeta[] {
+      if (!selector || selector.value === 'all') {
+        return allCheckpoints;
+      }
+
+      return allCheckpoints.filter((checkpoint) => checkpoint.checkpoint_id === selector.value);
+    }
+
+    function syncSelector(selectedValue: string) {
+      if (!selector) return;
+
+      selector.innerHTML = '';
+
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = 'All Checkpoints';
+      selector.appendChild(allOption);
+
+      for (const checkpoint of [...allCheckpoints].sort(
+        (left, right) => new Date(left.commit_date).getTime() - new Date(right.commit_date).getTime(),
+      )) {
+        const option = document.createElement('option');
+        option.value = checkpoint.checkpoint_id;
+        option.textContent = formatCheckpointOptionLabel(checkpoint);
+        selector.appendChild(option);
+      }
+
+      const nextValue =
+        selectedValue !== 'all' && allCheckpoints.some((checkpoint) => checkpoint.checkpoint_id === selectedValue)
+          ? selectedValue
+          : 'all';
+
+      selector.value = nextValue;
+      selector.disabled = allCheckpoints.length === 0;
+    }
+
+    function applyCache(cache: CheckpointsCache, selectedValue: string) {
+      allCheckpoints = filterRenderableCheckpoints(cache.checkpoints);
+
+      if (dataEl) {
+        dataEl.dataset.value = JSON.stringify(allCheckpoints);
+      }
+
+      if (repoEl) repoEl.textContent = cache.meta.repo;
+      if (branchEl) branchEl.textContent = cache.meta.branch;
+      if (countEl) countEl.textContent = String(cache.meta.checkpointCount);
+      if (generatedEl) generatedEl.textContent = formatGeneratedAt(cache.meta.generatedAt);
+
+      syncSelector(selectedValue);
+      renderDashboard(getSelectedCheckpoints());
+    }
+
+    if (selector) {
+      selector.addEventListener('change', () => {
+        renderDashboard(getSelectedCheckpoints());
+      });
+    }
+
+    if (refreshButton) {
+      const idleLabel = refreshButton.textContent ?? 'Refresh From GitHub';
+
+      refreshButton.addEventListener('click', async () => {
+        const selectedValue = selector?.value ?? 'all';
+
+        refreshButton.disabled = true;
+        refreshButton.textContent = 'Refreshing...';
+        setStatus('Fetching the latest checkpoint data from GitHub...', 'muted');
+
+        try {
+          const result = await fetchCheckpointsCache();
+          applyCache(result.cache, selectedValue);
+          setStatus(
+            `Loaded ${result.cache.meta.checkpointCount} checkpoints in ${(result.elapsedMs / 1000).toFixed(1)}s across ${result.apiCallCount} GitHub API calls.`,
+            'success',
+          );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Unknown error';
+          setStatus(`Refresh failed: ${message}`, 'error');
+        } finally {
+          refreshButton.disabled = false;
+          refreshButton.textContent = idleLabel;
+        }
+      });
+    }
+  </script>
 </AiMetricsLayout>
