@@ -1,0 +1,80 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "895b417b37d2",
+  "session_id": "bb5159a3-9718-4f7f-a947-a09483de3284",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-17T14:14:12.633548Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "src/lib/types.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-4-6[1m]",
+  "turn_id": "fdd92c7bf24d",
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 39957,
+    "cache_read_tokens": 261125,
+    "output_tokens": 2443,
+    "api_call_count": 8
+  },
+  "summary": {
+    "intent": "Verify git-ai v1.3.1 installation, systematically test all its commands and data access patterns, and produce a reference document comparing git-ai's capabilities against the existing BMAD checkpoint system.",
+    "outcome": "Installation was verified and a test commit was made to src/lib/types.ts to generate attribution data. The session was cut off before the full command testing, schema extraction, gap analysis, and document creation were completed.",
+    "learnings": {
+      "repo": [
+        "The repo at /Users/dmytroshamsiiev/Projects/metrics uses a custom BMAD checkpoint system on a separate GitHub branch (entire/checkpoints/v1 in ShamsiievDmytro/entire-bmad) to track AI metrics.",
+        "git-ai hooks are configured in ~/.claude/settings.json as PreToolUse and PostToolUse hooks running: git-ai checkpoint claude --hook-input stdin",
+        "git-ai stores data in two SQLite databases: a prompts DB and an internal DB (~/.git-ai/internal/db), both were empty at session start (fresh install).",
+        "git-ai uses git notes under refs/notes/ai to store per-commit attribution data; no notes existed before the test commit."
+      ],
+      "code": [
+        {
+          "path": "src/lib/types.ts",
+          "finding": "File was edited with a small test change to generate the first git-ai attribution data after fresh install."
+        }
+      ],
+      "workflow": [
+        "Fresh git-ai install produces empty SQLite tables and no git notes until the first tool-call-instrumented commit is made.",
+        "The session itself (with hooks firing on every tool call) serves as the live data source for git-ai attribution testing.",
+        "Token counts (input/cache_creation/cache_read/output) come from Claude API response metadata and are not tracked by git-ai, which is the key gap vs the BMAD CheckpointMeta type."
+      ]
+    },
+    "friction": [
+      "Session was incomplete — the transcript ends mid-task after making the test commit, before running any of the data query commands (stats, status, log, show, diff, blame, search, prompts SQL, raw git notes).",
+      "Databases were empty at start (fresh install), requiring a test commit before any meaningful data could be queried."
+    ],
+    "open_items": [
+      "Run all data access commands (git-ai stats, status, log, show, diff, blame, search, prompts exec SQL) and capture full JSON output.",
+      "Document complete SQLite schema for both the prompts DB and internal DB.",
+      "Document raw git notes structure written per commit after the test commit.",
+      "Perform field-by-field gap analysis comparing git-ai output to CheckpointMeta fields (agent_percentage, agent_lines, human_added/modified/removed, tokens, files_touched, turns, bmad_commands).",
+      "Write /Users/dmytroshamsiiev/Projects/metrics/docs/git-ai-reference.md with all findings and integration recommendation."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-17T14:13:53.431781Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 3,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3,
+    "total_lines_changed": 3,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 40,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".cursor/hooks.json": 40
+      }
+    }
+  ]
+}

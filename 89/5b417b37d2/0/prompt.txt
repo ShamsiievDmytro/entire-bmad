@@ -1,0 +1,209 @@
+Here is the full prompt to paste into a new session:                                                                                                                                                             
+                                               
+  ---                                                                                                                                                                                                              
+  git-ai Testing & Documentation Agent Prompt                                                                                                                                                                    
+                                                                                                                                                                                                                   
+  You are being asked to:
+  1. Verify git-ai v1.3.1 is working in this repo                                                                                                                                                                  
+  2. Systematically test every command and data access pattern                                                                                                                                                     
+  3. Produce a detailed reference document at docs/git-ai-reference.md                                                                                                                                             
+                                                                                                                                                                                                                   
+  ---                                                                                                                                                                                                              
+                                                                                                                                                                                                                   
+  ## Context                                                                                                                                                                                                       
+                                                                                                                                                                                                                 
+  git-ai was just installed globally at ~/.git-ai/bin/git-ai (symlinked to ~/.local/bin/git-ai).                                                                                                                   
+  It hooks into Claude Code via ~/.claude/settings.json — PreToolUse and PostToolUse hooks both run:
+    git-ai checkpoint claude --hook-input stdin                                                                                                                                                                    
+                                                                                                                                                                                                                 
+  This means: every tool call you make in this session will be checkpointed by git-ai.                                                                                                                             
+  That makes this session itself the test subject — make a few real file edits and commits                                                                                                                       
+  to generate attribution data, then query it back.                                                                                                                                                                
+                                                                                                                                                                                                                 
+  The repo is: /Users/dmytroshamsiiev/Projects/metrics  (branch: main)                                                                                                                                             
+  Remote:       https://github.com/ShamsiievDmytro/entire-bmad.git                                                                                                                                               
+                                                                                                                                                                                                                   
+  ---                                                                                                                                                                                                            
+                                                                                                                                                                                                                   
+  ## Why this matters                                                                                                                                                                                            
+                                               
+  The project currently fetches AI metrics from a custom BMAD checkpoint system stored on                                                                                                                          
+  a separate GitHub branch (entire/checkpoints/v1 in ShamsiievDmytro/entire-bmad).
+  That system tracks:                                                                                                                                                                                              
+    - agent_percentage, agent_lines, human_added/modified/removed                                                                                                                                                
+    - tokens: { input, cache_creation, cache_read, output }                                                                                                                                                        
+    - files_touched, turns (with model, prompt_txt, turn_count)                                                                                                                                                  
+    - bmad_commands (slash commands used per checkpoint)                                                                                                                                                           
+                                                                                                                                                                                                                 
+  The question is: can git-ai replace all or part of this?                                                                                                                                                         
+  The document you produce must answer that question with specific evidence.                                                                                                                                     
+                                                                                                                                                                                                                   
+  ---                                                                                                                                                                                                            
+                                                                                                                                                                                                                   
+  ## Step-by-step tasks                                                                                                                                                                                            
+                                               
+  ### 1. Verify installation                                                                                                                                                                                       
+  Run:                                                                                                                                                                                                           
+    git-ai version                             
+    git-ai debug                                                                                                                                                                                                   
+    git-ai config
+                                                                                                                                                                                                                   
+  Capture the output — confirm binary path, hooks are live, repo is recognized.                                                                                                                                    
+                                               
+  ### 2. Make a test commit to generate attribution data                                                                                                                                                           
+  Edit any small file (e.g. add a comment to src/lib/types.ts or similar).                                                                                                                                       
+  Commit it with a descriptive message so you can reference it by SHA.                                                                                                                                             
+  This commit will be made mid-session, so git-ai hooks should have fired.                                                                                                                                         
+                                                                                                                                                                                                                   
+  ### 3. Query all data access patterns                                                                                                                                                                            
+                                                                                                                                                                                                                   
+  After committing, run each of the following and capture full JSON output:                                                                                                                                        
+                                               
+    a) git-ai stats --json                                                                                                                                                                                         
+       (current working tree)                                                                                                                                                                                    
+                                                                                                                                                                                                                   
+    b) git-ai stats <commit-sha> --json                                                                                                                                                                            
+       (for the test commit you just made)     
+                                                                                                                                                                                                                   
+    c) git-ai status --json                                                                                                                                                                                        
+       (uncommitted AI authorship status)      
+                                                                                                                                                                                                                   
+    d) git-ai log -5                                                                                                                                                                                               
+       (last 5 commits with AI notes)          
+                                                                                                                                                                                                                   
+    e) git-ai show <commit-sha>                                                                                                                                                                                  
+       (full authorship log for the commit)    
+                                                                                                                                                                                                                   
+    f) git-ai diff <commit-sha> --json --include-stats --all-prompts                                                                                                                                               
+       (diff with attribution + all prompts)                                                                                                                                                                       
+                                                                                                                                                                                                                   
+    g) git-ai blame src/lib/types.ts                                                                                                                                                                             
+       (line-level attribution)                                                                                                                                                                                    
+                                                                                                                                                                                                                 
+    h) git-ai search --commit <commit-sha> --json --verbose                                                                                                                                                        
+       (prompt history for the commit)
+                                                                                                                                                                                                                   
+    i) git-ai search --pattern "test" --json --since 1d                                                                                                                                                            
+       (full-text prompt search)                                                                                                                                                                                   
+                                                                                                                                                                                                                   
+    j) git-ai search --file src/lib/types.ts --json                                                                                                                                                                
+       (file-scoped prompt search)             
+                                                                                                                                                                                                                   
+    k) git-ai prompts --since 1d                                                                                                                                                                                 
+       then: git-ai prompts exec "SELECT name FROM sqlite_master WHERE type='table'"
+       then: git-ai prompts exec "SELECT * FROM prompts LIMIT 5"                                                                                                                                                   
+       then: git-ai prompts exec "PRAGMA table_info(prompts)"                                                                                                                                                      
+       (explore full SQLite schema and sample data)                                                                                                                                                                
+                                                                                                                                                                                                                   
+    l) git notes --ref=ai list                                                                                                                                                                                     
+       git notes --ref=ai show <commit-sha>                                                                                                                                                                      
+       (raw git notes storage — what exactly is written per commit)                                                                                                                                                
+                                                                                                                                                                                                                   
+    m) ls ~/.git-ai/internal/                                                                                                                                                                                      
+       file ~/.git-ai/internal/db                                                                                                                                                                                  
+       (local storage — what files exist, what format)                                                                                                                                                             
+                                                                                                                                                                                                                   
+  ### 4. Capture schema of all data structures                                                                                                                                                                     
+                                                                                                                                                                                                                   
+  For every JSON output above, document the exact field names and types.                                                                                                                                           
+  For the SQLite DB, document every table, every column (name + type + meaning).                                                                                                                                 
+  For git notes, document the raw structure.                                                                                                                                                                       
+   
+  ### 5. Gap analysis vs current checkpoint system                                                                                                                                                                 
+                                                                                                                                                                                                                 
+  The current CheckpointMeta type is:                                                                                                                                                                              
+    {                                                                                                                                                                                                            
+      checkpoint_id: string                                                                                                                                                                                        
+      commit_date: string                                                                                                                                                                                        
+      agent_percentage: number        // % of lines written by AI
+      agent_lines: number                                                                                                                                                                                          
+      human_added: number
+      human_modified: number                                                                                                                                                                                       
+      human_removed: number                                                                                                                                                                                      
+      tokens: {                                
+        input: number                 // prompt tokens sent to model
+        cache_creation: number        // tokens written to cache                                                                                                                                                   
+        cache_read: number            // tokens read from cache
+        output: number                // tokens generated by model                                                                                                                                                 
+      }                                                                                                                                                                                                          
+      summary: { friction: string[], open_items: string[] }                                                                                                                                                        
+      learnings: { repo: number, code: number, workflow: number }                                                                                                                                                  
+      files_touched: string[]                                                                                                                                                                                      
+      turns: Array<{                                                                                                                                                                                               
+        turn_id: string                                                                                                                                                                                            
+        session_id: string                                                                                                                                                                                       
+        model: string               // e.g. "claude-sonnet-4-6"
+        prompt_txt: string          // first line of the user prompt                                                                                                                                               
+        turn_count: number                                                                                                                                                                                         
+        agent_percentage: number                                                                                                                                                                                   
+      }>                                                                                                                                                                                                           
+      bmad_commands: Record<string, number>  // { "/bmad-dev-story": 3, ... }                                                                                                                                    
+      fetch_failed: boolean                                                                                                                                                                                        
+    }                                                                                                                                                                                                              
+                                                                                                                                                                                                                   
+  For each field, state:                                                                                                                                                                                           
+    - Can git-ai provide this? (yes / partial / no)                                                                                                                                                              
+    - If yes: exact command and JSON field path to retrieve it                                                                                                                                                     
+    - If no: what is missing and why                                                                                                                                                                               
+                                                                                                                                                                                                                   
+  ### 6. Write the document                                                                                                                                                                                        
+                                                                                                                                                                                                                   
+  Create the file: /Users/dmytroshamsiiev/Projects/metrics/docs/git-ai-reference.md                                                                                                                                
+                                               
+  Structure:                                                                                                                                                                                                       
+    # git-ai Reference                                                                                                                                                                                           
+                                               
+    ## Installation & Configuration
+    - Binary location, version
+    - How hooks work (PreToolUse / PostToolUse → checkpoint claude)                                                                                                                                                
+    - Config file location and current config                                                                                                                                                                      
+                                                                                                                                                                                                                   
+    ## Data Storage Architecture                                                                                                                                                                                   
+    - Git notes (refs/notes/ai): what is stored per commit, how to read                                                                                                                                          
+    - Local SQLite DB (~/.git-ai/internal/db): schema, tables, access                                                                                                                                              
+    - Prompt storage: where prompts live, how to query                                                                                                                                                             
+                                                                                                                                                                                                                   
+    ## Command Reference                                                                                                                                                                                           
+    For each command tested: purpose, flags, full JSON schema of output,                                                                                                                                         
+    example output (trimmed to key fields)                                                                                                                                                                         
+                                                                                                                                                                                                                   
+    ## Field-by-Field Mapping to Current CheckpointMeta                                                                                                                                                            
+    Table format: | CheckpointMeta field | git-ai equivalent | Coverage | Notes |                                                                                                                                  
+                                                                                                                                                                                                                   
+    ## What git-ai Cannot Replace                                                                                                                                                                                  
+    Explicit list of gaps — token counts (input/output/cache), session-level                                                                                                                                       
+    summaries, BMAD-specific learnings, etc.                                                                                                                                                                       
+                                                                                                                                                                                                                 
+    ## What git-ai Adds                                                                                                                                                                                            
+    Data the current system does NOT have:                                                                                                                                                                       
+    - Per-line AI attribution                                                                                                                                                                                      
+    - Time waiting for AI (time_waiting_for_ai)                                                                                                                                                                    
+    - Tool/model breakdown per commit          
+    - Full prompt text retrieval                                                                                                                                                                                   
+    - File-level and line-level attribution blame                                                                                                                                                                
+                                                                                                                                                                                                                   
+    ## Recommended Integration Strategy                                                                                                                                                                            
+    Based on the gap analysis: what to keep from the current system,
+    what to migrate to git-ai, what to query from git-ai API in the dashboard.                                                                                                                                     
+                                                                                                                                                                                                                   
+  ---                                                                                                                                                                                                              
+                                                                                                                                                                                                                   
+  ## Important notes                                                                                                                                                                                               
+                                                                                                                                                                                                                 
+  - Run git-ai as: /Users/dmytroshamsiiev/.git-ai/bin/git-ai (or git-ai if PATH is loaded)                                                                                                                         
+  - The git-ai binary may need to be restarted — this is a fresh session after install.
+    If notes are empty, that is expected for pre-install commits; your test commit will                                                                                                                            
+    be the first with real attribution data.                                                                                                                                                                       
+  - Do NOT push to the remote unless explicitly needed for testing.                                                                                                                                                
+  - The document should be factual and evidence-based — include actual command output                                                                                                                              
+    samples, not guesses. If a command errors, document the error and explain why.                                                                                                                                 
+                                                                                                                                                                                                                   
+  ---                                                                                                                                                                                                              
+  What this prompt covers:                                                                                                                                                                                         
+                                                                                                                                                                                                                   
+  - Makes the new session itself generate live git-ai data (via hooks firing on every tool call)                                                                                                                 
+  - Tests every command surface: stats, status, log, show, diff, blame, search, prompts SQL, raw git notes, local file storage                                                                                     
+  - Extracts full SQLite schema for programmatic access                                                                                                                                                            
+  - Does a field-by-field comparison against your CheckpointMeta type                                                                                                                                              
+  - Identifies the key gap: token counts (input/cache/output) are not tracked by git-ai — those come from the Claude API response metadata, not from git                                                           
+  - Produces a concrete integration recommendation so you know exactly what to replace vs keep
