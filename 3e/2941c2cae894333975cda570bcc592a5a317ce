@@ -1,0 +1,23 @@
+src/lib/types.ts
+  c4c09426203e4095 21-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "3e2941c2cae894333975cda570bcc592a5a317ce",
+  "prompts": {
+    "c4c09426203e4095": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bb5159a3-9718-4f7f-a947-a09483de3284",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
