@@ -18,6 +18,3 @@ export interface ChartPoint {
 }
 
 export type ConnectionStatus = 'connecting' | 'live' | 'reconnecting' | 'stale' | 'fallback';
-
-// git-ai test: timestamp 2026-04-17T14:13 — this line was added to generate attribution data
-export const GIT_AI_TEST_MARKER = 'git-ai-attribution-test' as const;
