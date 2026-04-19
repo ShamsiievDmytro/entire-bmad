@@ -1,0 +1,46 @@
+scripts/fetch-checkpoints.ts
+  0b7268e23bcacba1 25
+src/components/react/BehavioralSection.tsx
+  0b7268e23bcacba1 3,28-38,45-54,56,59,85,108,114-133,138-152,155-158,162,170-173,184-187,198-202,210-250
+src/components/react/StatCard.tsx
+  0b7268e23bcacba1 1,4,6-8,13-14,25-26,33-34,37-62,79,84
+src/components/react/QualitySection.tsx
+  0b7268e23bcacba1 45-49
+src/components/react/AttributionSection.tsx
+  0b7268e23bcacba1 3,10-11,30-40,44-45,49,54-55,62,68,73-84,91-95,98,104-105,115-118,121,129-132,136,144-145,152-183
+src/components/react/TokenSection.tsx
+  0b7268e23bcacba1 1,7-8,20,27-29,31-36,38-42,48-52,55-56,61-68,87-91,105-109,113-121,129-146,149,157-160,162-163
+src/lib/utils/ai-metrics-utils.ts
+  0b7268e23bcacba1 23-33,94-143
+src/components/react/TemporalSection.tsx
+  0b7268e23bcacba1 25,27-30,42,52-57,60
+src/lib/utils/github-checkpoints.ts
+  0b7268e23bcacba1 21-23,79-81,106-122,152,246,481-483,493-499,501,535-537,555-557
+scripts/types.ts
+  0b7268e23bcacba1 39-41
+src/lib/utils/ai-metrics-utils.test.ts
+  0b7268e23bcacba1 32-34
+src/components/react/MetricCard.tsx
+  0b7268e23bcacba1 1,4-8,14-16,21-23,31-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "38c4e292207b0dded60a09c5a61184567b551899",
+  "prompts": {
+    "0b7268e23bcacba1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff2d2875-e1ed-41dc-bec6-80ad2b1428ca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 1542,
+      "total_deletions": 310,
+      "accepted_lines": 1299,
+      "overriden_lines": 62,
+      "messages_url": "https://usegitai.com/cas/6d2e372a6e99c0d62be065eda03b55753d01ebdaf7f7b28de1dc2b7fcb603461"
+    }
+  }
+}
