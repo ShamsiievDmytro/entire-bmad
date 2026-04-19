@@ -1,0 +1,181 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "befb857b14f6",
+  "session_id": "bb5159a3-9718-4f7f-a947-a09483de3284",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-19T19:43:59.878285Z",
+  "branch": "main",
+  "checkpoints_count": 12,
+  "files_touched": [
+    "docs/git-ai-reference.md",
+    "src/lib/types.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-4-6[1m]",
+  "turn_id": "4bf185990e05",
+  "checkpoint_transcript_start": 60,
+  "transcript_lines_at_start": 60,
+  "token_usage": {
+    "input_tokens": 68,
+    "cache_creation_tokens": 213354,
+    "cache_read_tokens": 3078846,
+    "output_tokens": 28501,
+    "api_call_count": 46
+  },
+  "session_metrics": {
+    "turn_count": 12
+  },
+  "summary": {
+    "intent": "Explore git-ai's capabilities, understand its data storage architecture, and evaluate whether it can serve as a data source for the team's existing metrics dashboard.",
+    "outcome": "git-ai was installed and tested end-to-end; a comprehensive reference doc was written to docs/git-ai-reference.md; the tool was determined to be local-first and unsuitable as a drop-in replacement for the current checkpoint system without extra per-developer setup.",
+    "learnings": {
+      "repo": [
+        "The metrics dashboard fetches checkpoint data from the `entire/checkpoints/v1` branch via GitHub API (github-checkpoints.ts + fetch-checkpoints.ts), not from local CLI.",
+        "git-ai stores attribution data as git notes under refs/notes/ai — one blob per commit, with path structure \u003cfirst-2-chars-of-sha\u003e/\u003cremaining-sha\u003e.",
+        "git-ai's local SQLite databases live at ~/.git-ai/internal/db (4 tables) and prompts.db is generated on demand in the repo root.",
+        "The note JSON has an empty `messages: []` field — full conversation transcripts are stored only in ~/.git-ai/internal/db and never travel with the git notes.",
+        "git-ai tracks: agent_percentage, agent_lines, human_added, files_touched, session_id, model, prompt_txt, checkpoint_id, commit_date. It does NOT track: tokens (input/output/cache), summaries, learnings, human_removed, bmad_commands."
+      ],
+      "code": [
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "finding": "Fetches checkpoint metadata from entire/checkpoints/v1 branch via GitHub API — same pattern could be reused to fetch git-ai notes from refs/notes/ai."
+        },
+        {
+          "path": "scripts/fetch-checkpoints.ts",
+          "finding": "CI/build script that populates the checkpoints cache; equivalent script would be needed for git-ai note aggregation."
+        },
+        {
+          "path": "src/lib/types.ts",
+          "finding": "A temporary test marker was added and then removed during the session to validate git-ai attribution tracking."
+        },
+        {
+          "path": "docs/git-ai-reference.md",
+          "finding": "New file created: comprehensive reference covering all git-ai commands, SQLite schemas, git notes JSON structure, and gap analysis vs CheckpointMeta."
+        }
+      ],
+      "workflow": [
+        "git notes are NOT pushed by default — developers must run `git push origin refs/notes/ai` explicitly, or configure `git config --global remote.origin.push '+refs/notes/ai:refs/notes/ai'`.",
+        "GitHub API traversal for git notes requires 3+N calls: ref → commit → recursive tree → N blob fetches. The recursive=1 tree fetch collapses note paths into one call.",
+        "git-ai's `--json` and `--verbose` flags are mutually exclusive — using both causes an error.",
+        "git-ai's `--since` flag on `--pattern` search is not yet implemented (warns but does not error).",
+        "prompt_storage config accepts `default`, `notes`, or `local` — all local; no remote DB connection string support.",
+        "After `git-ai login`, the CAS sync queue may auto-upload data to usegitai.com SaaS, which is the intended team-wide metrics path."
+      ]
+    },
+    "friction": [
+      "`--json` and `--verbose` flags are mutually exclusive in git-ai but this is not documented upfront — discovered by error.",
+      "`--since` on `--pattern` search silently does nothing (warns 'not yet implemented').",
+      "GitHub web UI does not display git notes natively — requires 4-level API traversal to read note content.",
+      "git notes do not push automatically with `git push` — requires explicit configuration or manual push per developer.",
+      "The test commit (3e2941c) was not pushed to remote main before pushing notes, so the note references a commit GitHub cannot resolve.",
+      "Full prompt/message data stays on the developer's local machine and is never exported via git notes, making team-wide prompt analytics impossible without SaaS login."
+    ],
+    "open_items": [
+      "Test whether `git-ai login` + CAS sync queue actually uploads data to usegitai.com and what the team dashboard shows.",
+      "Make a test commit while logged in to verify sync queue picks up new data after authentication.",
+      "Push main branch so commit 3e2941c is visible on GitHub alongside its notes.",
+      "Decide whether to build a `fetchGitAiNotes()` function (Option 2 from the session) to pull line-attribution data into the existing dashboard alongside checkpoint data.",
+      "Evaluate if git-ai's SaaS team dashboard covers enough metrics to reduce reliance on the custom checkpoint system, or if both systems need to coexist.",
+      "Set up a post-push git hook or CI step to auto-push refs/notes/ai if the team adopts git-ai for attribution tracking."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-19T19:43:31.844884Z",
+    "agent_lines": 787,
+    "agent_removed": 3,
+    "human_added": 40,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 827,
+    "total_lines_changed": 830,
+    "agent_percentage": 95.18072289156626,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 827,
+      "agent_lines_removed": 3
+    }
+  ]
+}

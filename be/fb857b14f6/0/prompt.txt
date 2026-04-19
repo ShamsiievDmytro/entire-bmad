@@ -1,0 +1,43 @@
+what commands are available
+
+---
+
+git ai stats
+
+---
+
+is it possible to setup not local database but for example provide connection string
+
+---
+
+so for example in case I have a lot of developers in the team and I want all of the to participate im metrics it is not possible ?
+
+---
+
+could you commite current notes So I can check them in the github
+
+---
+
+gh api repos/ShamsiievDmytro/entire-bmad/git/refs/notes
+
+---
+
+so when I execute gh api repos/ShamsiievDmytro/entire-bmad/git/refs/notes  I see limited data 
+how can I see then the details
+
+---
+
+and how I can get data for metrics
+
+---
+
+I want to understand how it is works and where all this data is stored 
+now I have not idea where I need to fetch it
+
+---
+
+so in case some developer did some changes and pushed, can I fetch prompts, usage, code metrics etc withput any additional actions from his side
+
+---
+
+I logged in to git ai, what is next ?
