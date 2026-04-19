@@ -29,6 +29,9 @@ function makeCheckpoint(overrides: Partial<CheckpointMeta>): CheckpointMeta {
     files_touched: [],
     turns: [],
     bmad_commands: {},
+    tool_usage: {},
+    skill_usage: {},
+    subagent_count: 0,
     fetch_failed: false,
     ...overrides,
   };

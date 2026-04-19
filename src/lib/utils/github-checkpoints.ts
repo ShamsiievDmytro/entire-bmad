@@ -18,6 +18,9 @@ export interface TranscriptExtraction {
   bmad_commands: Record<string, number>;
   models: Record<string, number>;
   first_prompt: string;
+  tool_usage: Record<string, number>;
+  skill_usage: Record<string, number>;
+  subagent_count: number;
 }
 
 export interface FetchCheckpointsCacheOptions {
@@ -73,6 +76,9 @@ function decodeBase64Utf8(content: string): string {
 export function extractTranscriptData(jsonlContent: string): TranscriptExtraction {
   const bmad_commands: Record<string, number> = {};
   const models: Record<string, number> = {};
+  const tool_usage: Record<string, number> = {};
+  const skill_usage: Record<string, number> = {};
+  let subagent_count = 0;
   let first_prompt = '';
 
   const commandRegex = /^\/[a-z][a-z0-9-]*/;
@@ -96,6 +102,23 @@ export function extractTranscriptData(jsonlContent: string): TranscriptExtractio
       const model = getString(messageRaw, 'model');
       if (model) {
         models[model] = (models[model] ?? 0) + 1;
+      }
+
+      const contentArr = Array.isArray(messageRaw['content']) ? messageRaw['content'] : [];
+      for (const block of contentArr) {
+        if (!isRecord(block) || block['type'] !== 'tool_use') continue;
+        const toolName = getString(block, 'name') ?? 'unknown';
+        tool_usage[toolName] = (tool_usage[toolName] ?? 0) + 1;
+
+        const blockInput = isRecord(block['input']) ? block['input'] : null;
+        if (toolName === 'Skill' && blockInput) {
+          const skillId = getString(blockInput, 'skill') ?? getString(blockInput, 'name') ?? 'unknown';
+          skill_usage[skillId] = (skill_usage[skillId] ?? 0) + 1;
+        }
+
+        if (toolName === 'Task' || toolName === 'Agent') {
+          subagent_count++;
+        }
       }
     }
 
@@ -126,7 +149,7 @@ export function extractTranscriptData(jsonlContent: string): TranscriptExtractio
     }
   }
 
-  return { bmad_commands, models, first_prompt };
+  return { bmad_commands, models, first_prompt, tool_usage, skill_usage, subagent_count };
 }
 
 export function extractBmadCommands(jsonlContent: string): Record<string, number> {
@@ -220,7 +243,7 @@ export function parseMetadata(
   raw: unknown,
   checkpointId: string,
   commitDate: string,
-): Omit<CheckpointMeta, 'bmad_commands' | 'fetch_failed'> {
+): Omit<CheckpointMeta, 'bmad_commands' | 'tool_usage' | 'skill_usage' | 'subagent_count' | 'fetch_failed'> {
   if (!isRecord(raw)) {
     return {
       checkpoint_id: checkpointId,
@@ -455,6 +478,9 @@ export async function fetchCheckpointsCache(
       const jsonlPaths = [...(sessionJsonlPaths.get(prefix) ?? [])].sort();
       const sessionExtractions: TranscriptExtraction[] = [];
       const bmad_commands: Record<string, number> = {};
+      const tool_usage: Record<string, number> = {};
+      const skill_usage: Record<string, number> = {};
+      let subagent_count = 0;
 
       for (const jsonlPath of jsonlPaths) {
         try {
@@ -464,8 +490,15 @@ export async function fetchCheckpointsCache(
           for (const [command, count] of Object.entries(extraction.bmad_commands)) {
             bmad_commands[command] = (bmad_commands[command] ?? 0) + count;
           }
+          for (const [tool, count] of Object.entries(extraction.tool_usage)) {
+            tool_usage[tool] = (tool_usage[tool] ?? 0) + count;
+          }
+          for (const [skill, count] of Object.entries(extraction.skill_usage)) {
+            skill_usage[skill] = (skill_usage[skill] ?? 0) + count;
+          }
+          subagent_count += extraction.subagent_count;
         } catch {
-          sessionExtractions.push({ bmad_commands: {}, models: {}, first_prompt: '' });
+          sessionExtractions.push({ bmad_commands: {}, models: {}, first_prompt: '', tool_usage: {}, skill_usage: {}, subagent_count: 0 });
         }
       }
 
@@ -499,6 +532,9 @@ export async function fetchCheckpointsCache(
         files_touched,
         turns,
         bmad_commands,
+        tool_usage,
+        skill_usage,
+        subagent_count,
         fetch_failed: false,
       };
     } catch {
@@ -516,6 +552,9 @@ export async function fetchCheckpointsCache(
         files_touched: [],
         turns: [],
         bmad_commands: {},
+        tool_usage: {},
+        skill_usage: {},
+        subagent_count: 0,
         fetch_failed: true,
       };
     }

@@ -36,6 +36,9 @@ export interface CheckpointMeta {
   files_touched: string[];
   turns: TurnMeta[];
   bmad_commands: Record<string, number>;
+  tool_usage: Record<string, number>;
+  skill_usage: Record<string, number>;
+  subagent_count: number;
   fetch_failed: boolean;
 }
 

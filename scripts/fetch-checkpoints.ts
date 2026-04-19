@@ -22,7 +22,7 @@ async function run(): Promise<void> {
 
   const elapsed = (elapsedMs / 1000).toFixed(1);
   console.log(
-    `\nDone. Checkpoints: ${checkpoints.length}, API calls: ${apiCallCount}, Time: ${elapsed}s`
+    `\nDone. Checkpoints: ${cache.checkpoints.length}, API calls: ${apiCallCount}, Time: ${elapsed}s`
   );
   console.log(`Output: ${outputPath}`);
 }

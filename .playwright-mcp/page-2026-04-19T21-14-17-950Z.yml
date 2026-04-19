@@ -1,0 +1,201 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Market" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - link "AI Metrics" [ref=e5] [cursor=pointer]:
+        - /url: /ai-metrics
+    - main [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - generic [ref=e9]:
+            - generic [ref=e10]:
+              - generic [ref=e11]:
+                - text: Repository
+                - paragraph [ref=e12]: ShamsiievDmytro/entire-bmad
+              - generic [ref=e13]:
+                - text: Branch
+                - paragraph [ref=e14]: entire/checkpoints/v1
+              - generic [ref=e15]:
+                - text: Commits
+                - paragraph [ref=e16]: "19"
+              - generic [ref=e17]:
+                - text: Generated
+                - paragraph [ref=e18]: 4/19/2026, 11:13:28 PM
+              - generic [ref=e19]:
+                - generic [ref=e20]: View
+                - generic [ref=e21]:
+                  - combobox [ref=e22] [cursor=pointer]: All Commits
+                  - textbox: all
+                  - img
+                  - group:
+                    - generic: View
+            - button "Refresh From GitHub" [ref=e23] [cursor=pointer]
+          - generic [ref=e24]:
+            - generic [ref=e25]: Dashboard is showing the cached commit snapshot until you refresh.
+            - generic [ref=e26]: GitHub API limit is 60 requests per hour when used without a token.
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Attribution" [level=6] [ref=e29]
+            - separator [ref=e30]
+          - generic [ref=e31]:
+            - heading "Attribution Trend (Rolling Avg)" [level=6] [ref=e32]
+            - generic [ref=e33]:
+              - generic [ref=e35]: Line
+              - generic [ref=e37]: lightweight-charts
+            - generic [ref=e38]: "Smoothed 3-checkpoint rolling average of AI attribution percentage. For each checkpoint, the displayed value is the mean of that checkpoint and the two preceding ones (or fewer at the start of the series). This filters out single-commit noise and reveals the real long-term direction of AI adoption. Calculated as: rolling_avg[i] = mean(agent_percentage[max(0, i-2) .. i])."
+          - generic [ref=e40]:
+            - heading "Agent % Over Time (Smoothed)" [level=6] [ref=e41]
+            - generic [ref=e42]:
+              - generic [ref=e44]: Line
+              - generic [ref=e46]: lightweight-charts
+            - generic [ref=e47]: AI-authored line share per commit, smoothed with a 3-checkpoint rolling average to reduce noise from outlier commits (e.g., config-only or zero-line checkpoints). Each point shows the mean agent_percentage of that commit and the two preceding ones. Raw values can swing wildly between commits; this view shows the actual adoption trajectory.
+          - generic [ref=e49]:
+            - heading "Pure-AI Commit Rate" [level=6] [ref=e50]
+            - generic [ref=e53]: Stat card
+            - generic [ref=e54]: "Percentage of commits where agent_percentage equals exactly 100% — meaning every line of code was AI-authored with zero human edits. Calculated as: (count of checkpoints with agent_percentage = 100) / (total checkpoints) × 100. Distinguishes 'AI helped a bit' from 'AI did the work end-to-end.'"
+            - generic [ref=e55]:
+              - paragraph [ref=e56]: 26%
+              - paragraph [ref=e57]: 5 of 19 commits fully AI-authored
+          - generic [ref=e58]:
+            - heading "Human Edit Rate" [level=6] [ref=e59]
+            - generic [ref=e60]:
+              - generic [ref=e62]: Bar
+              - generic [ref=e64]: Chart.js
+            - generic [ref=e65]: Shows (100 − agent_percentage) for each checkpoint as a bar. Each bar represents the percentage of committed lines that were written or modified by a human. Rising bars signal that AI output is being rewritten more heavily before commit, suggesting quality issues or a mismatch between AI suggestions and team standards.
+          - generic [ref=e68]:
+            - heading "Attribution Breakdown" [level=6] [ref=e69]
+            - generic [ref=e70]:
+              - generic [ref=e72]: Stacked bar
+              - generic [ref=e74]: Chart.js
+            - generic [ref=e75]: Each bar is one checkpoint, stacked to 100%. The purple segment shows agent_percentage (AI-authored lines), the green segment shows (100 − agent_percentage) (human-contributed lines). Makes the human/AI balance instantly readable — a bar that is mostly purple means AI did most of the work for that commit.
+          - generic [ref=e78]:
+            - heading "Avg Agent Attribution" [level=6] [ref=e79]
+            - generic [ref=e82]: Stat card
+            - generic [ref=e83]: "Arithmetic mean of agent_percentage across all selected checkpoints. Calculated as: sum(agent_percentage) / count(checkpoints). A single headline number summarizing how AI-native the project is overall. Values above 80% indicate the AI is writing most of the code; below 50% means humans are still doing the majority."
+            - generic [ref=e84]:
+              - paragraph [ref=e85]: 72%
+              - paragraph [ref=e86]: average across 19 commits
+          - generic [ref=e87]:
+            - heading "First-Time-Right Rate" [level=6] [ref=e88]
+            - generic [ref=e89]:
+              - generic [ref=e91]: Stat card + trend
+              - generic [ref=e93]: lightweight-charts
+            - generic [ref=e94]: "Percentage of checkpoints where AI-generated code shipped with zero human intervention — no lines added, modified, or removed by humans. A checkpoint qualifies as 'first-time-right' when agent_lines > 0 AND human_added = 0 AND human_modified = 0 AND human_removed = 0. Calculated as: (FTR checkpoints) / (checkpoints with agent_lines > 0) × 100. The sparkline below shows each checkpoint as 100 (pristine) or 0 (human touched)."
+            - generic [ref=e95]:
+              - paragraph [ref=e96]: 33.3%
+              - paragraph [ref=e97]: 5 of 15 checkpoints with AI code shipped unedited
+          - generic [ref=e99]:
+            - heading "Token Economics" [level=6] [ref=e100]
+            - separator [ref=e101]
+          - generic [ref=e102]:
+            - heading "Token Breakdown" [level=6] [ref=e103]
+            - generic [ref=e104]:
+              - generic [ref=e106]: Stacked bar
+              - generic [ref=e108]: Chart.js
+            - generic [ref=e109]: "Stacked bar showing token consumption per checkpoint. Each bar is split into segments: Input tokens (purple) are the prompt tokens sent to the model, Output tokens (amber) are the tokens generated by the model. When the toggle is on, Cache Creation (cyan) and Cache Read (gray) tokens are also shown — cache reads typically dominate at 93-98% of total, so they are hidden by default to keep input/output visible."
+            - generic [ref=e110] [cursor=pointer]:
+              - switch "Include cache tokens (cache reads dominate 93-98% of total)" [ref=e113]
+              - generic [ref=e116]: Include cache tokens (cache reads dominate 93-98% of total)
+          - generic [ref=e119]:
+            - heading "API Call Count" [level=6] [ref=e120]
+            - generic [ref=e121]:
+              - generic [ref=e123]: Bar
+              - generic [ref=e125]: Chart.js
+            - generic [ref=e126]: Total number of API turns made per checkpoint, calculated as the sum of turn_count across all sessions in each checkpoint. A high value means the AI agent made many back-and-forth calls with the model. Useful alongside token charts to distinguish chatty sessions (many calls, few tokens each) from deep-reasoning sessions (few calls, many tokens each).
+          - generic [ref=e129]:
+            - heading "Prompts per Checkpoint" [level=6] [ref=e130]
+            - generic [ref=e131]:
+              - generic [ref=e133]: Bar
+              - generic [ref=e135]: Chart.js
+            - generic [ref=e136]: Count of distinct prompt turn entries (turns.length) per checkpoint — the number of times a user or system sent a prompt to the AI agent. This is different from API Call Count which sums the internal turn_count depth. Directly maps to request-based billing models (e.g., GitHub Copilot charges per request, not per token).
+          - generic [ref=e139]:
+            - heading "Model Distribution" [level=6] [ref=e140]
+            - generic [ref=e141]:
+              - generic [ref=e143]: Doughnut
+              - generic [ref=e145]: Chart.js
+            - generic [ref=e146]: Doughnut chart showing the frequency of each LLM model used across all turns in all selected checkpoints. Each slice represents a model (e.g., claude-opus-4-6, claude-sonnet-4-6) sized by how many turns used that model. Reveals whether premium models are overused for simple tasks and helps identify which models to standardize on for cost control.
+          - generic [ref=e149]:
+            - heading "Quality Signals" [level=6] [ref=e150]
+            - separator [ref=e151]
+          - generic [ref=e152]:
+            - heading "Session Depth vs Agent %" [level=6] [ref=e153]
+            - generic [ref=e154]:
+              - generic [ref=e156]: Scatter
+              - generic [ref=e158]: Chart.js
+            - generic [ref=e159]: Each dot represents one checkpoint. The X-axis shows the total number of API turns (sum of turn_count across all sessions in that checkpoint) — a proxy for how long and deep the AI session was. The Y-axis shows the agent_percentage — how much of the final committed code was AI-authored. This reveals whether longer sessions produce higher-quality AI output or degrade as context windows fill up. A positive correlation (dots trending up-right) means deeper sessions yield more AI code; a flat or negative pattern suggests context degradation.
+          - generic [ref=e162]:
+            - heading "Behavioral / SDLC" [level=6] [ref=e163]
+            - separator [ref=e164]
+          - generic [ref=e165]:
+            - heading "Slash Command Frequency" [level=6] [ref=e166]
+            - generic [ref=e167]:
+              - generic [ref=e169]: Horizontal bar
+              - generic [ref=e171]: Chart.js
+            - generic [ref=e172]: Horizontal bar chart showing every slash command (e.g., /clear, /commit, /dev-story) used across all selected checkpoints, sorted by total invocation count. Data is extracted from user prompts in the JSONL transcripts by matching lines starting with '/'. Shows which parts of the team's structured workflow are actually being used vs which exist only on paper.
+          - generic [ref=e175]:
+            - heading "BMAD Command Frequency" [level=6] [ref=e176]
+            - generic [ref=e177]:
+              - generic [ref=e179]: Horizontal bar
+              - generic [ref=e181]: Chart.js
+            - generic [ref=e182]: Same as Slash Command Frequency but filtered to only show commands with the /bmad prefix (e.g., /bmad-dev-story, /bmad-code-review, /bmad-create-story). Provides a focused view of BMAD-specific workflow adoption, separate from general slash commands like /clear or /commit.
+          - generic [ref=e185]:
+            - heading "Prompt Type Distribution" [level=6] [ref=e186]
+            - generic [ref=e187]:
+              - generic [ref=e189]: Doughnut
+              - generic [ref=e191]: Chart.js
+            - generic [ref=e192]: "Doughnut chart classifying every user prompt turn into three categories: Slash Command (starts with '/'), Free-form (regular natural language text), or Continuation (empty prompt — user pressed enter without typing). Higher slash-command share indicates a disciplined, structured workflow; high free-form share suggests exploratory or ad-hoc usage."
+          - generic [ref=e195]:
+            - heading "Files Touched by Layer" [level=6] [ref=e196]
+            - generic [ref=e197]:
+              - generic [ref=e199]: Stacked bar
+              - generic [ref=e201]: Chart.js
+            - generic [ref=e202]: "Stacked bar per checkpoint showing how many files were modified, grouped by architectural layer. Layers are classified by file path: components/ → Components, services/ → Services, stores/ → Stores, utils/ → Utils, docs/ or *.md → Docs, everything else → Other. Reveals which parts of the codebase the AI is trusted with and which layers are avoided."
+          - generic [ref=e205]:
+            - heading "Unique Sessions per Checkpoint" [level=6] [ref=e206]
+            - generic [ref=e207]:
+              - generic [ref=e209]: Bar
+              - generic [ref=e211]: Chart.js
+            - generic [ref=e212]: "Bar chart showing the count of distinct session_id values in each checkpoint's turns array. Calculated as: new Set(checkpoint.turns.map(t => t.session_id)).size. A value of 1 means the entire commit came from a single work session; higher values mean multiple sessions contributed to the same commit."
+          - generic [ref=e215]:
+            - heading "Tool Usage Mix" [level=6] [ref=e216]
+            - generic [ref=e217]:
+              - generic [ref=e219]: Horizontal bar
+              - generic [ref=e221]: Chart.js
+            - generic [ref=e222]: Horizontal bar chart showing every tool invoked BY the AI agent during its work, aggregated across all selected checkpoints. Data is extracted from tool_use blocks in assistant messages within the JSONL transcripts. Common tools include Read, Edit, Bash, Grep, Glob, Write, Skill, and Agent. Answers 'what kind of work did the AI do?' — reading-heavy (exploration), editing-heavy (implementation), or automating (Bash/WebSearch).
+          - generic [ref=e225]:
+            - heading "Top-N Skills Invoked" [level=6] [ref=e226]
+            - generic [ref=e227]:
+              - generic [ref=e229]: Horizontal bar
+              - generic [ref=e231]: Chart.js
+            - generic [ref=e232]: Horizontal bar chart showing which Skills the AI agent invoked via the Skill tool, sorted by frequency. These are NOT skills invoked by the human — they are skills that the AI agent decided to use during its autonomous work (e.g., bmad-dev-story, bmad-code-review, commit). Data is extracted from tool_use blocks where name='Skill' and the skill ID is read from the input.skill field. Directly informs which skills in the catalog get real usage.
+          - generic [ref=e235]:
+            - heading "Subagent Usage Timeline" [level=6] [ref=e236]
+            - generic [ref=e237]:
+              - generic [ref=e239]: Bar
+              - generic [ref=e241]: Chart.js
+            - generic [ref=e242]: Bar chart over time showing how many subagent tasks the AI spawned per checkpoint. Counts tool_use blocks where name is 'Task' or 'Agent' in the JSONL transcripts. Shows whether the team is adopting agentic workflows (delegating subtasks to AI subagents) over time — a leading indicator of moving from 'AI assists me' to 'I orchestrate AI agents.'
+          - generic [ref=e245]:
+            - heading "Temporal" [level=6] [ref=e246]
+            - separator [ref=e247]
+          - generic [ref=e248]:
+            - heading "Checkpoint Cadence" [level=6] [ref=e249]
+            - generic [ref=e250]:
+              - generic [ref=e252]: Bar
+              - generic [ref=e254]: Chart.js
+            - generic [ref=e255]: "Time gap in hours between each consecutive pair of checkpoints, sorted chronologically. Calculated as: (commit_date[i] − commit_date[i−1]) converted to hours. Exposes work rhythm — short bars mean tight bursts of shipping, tall bars mean long gaps between commits. Useful for spotting stalled work or unsustainable intensity."
+  - generic [ref=e260]:
+    - button "Menu" [ref=e261]:
+      - img [ref=e263]
+      - generic: Menu
+    - button "Inspect" [ref=e267]:
+      - img [ref=e269]
+      - generic: Inspect
+    - button "Audit" [ref=e271]:
+      - generic [ref=e272]:
+        - img [ref=e273]
+        - img [ref=e276]
+      - generic: Audit
+    - button "Settings" [ref=e279]:
+      - img [ref=e281]
+      - generic: Settings

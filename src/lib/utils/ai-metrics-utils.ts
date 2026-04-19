@@ -20,7 +20,17 @@ export function isRenderableCheckpoint(checkpoint: CheckpointMeta): boolean {
 }
 
 export function filterRenderableCheckpoints(checkpoints: CheckpointMeta[]): CheckpointMeta[] {
-  return checkpoints.filter(isRenderableCheckpoint);
+  return checkpoints.filter(isRenderableCheckpoint).map(normalizeCheckpoint);
+}
+
+/** Backfill fields that may be missing in older cached data. */
+function normalizeCheckpoint(cp: CheckpointMeta): CheckpointMeta {
+  return {
+    ...cp,
+    tool_usage: cp.tool_usage ?? {},
+    skill_usage: cp.skill_usage ?? {},
+    subagent_count: cp.subagent_count ?? 0,
+  };
 }
 
 export function formatGeneratedAt(generatedAt?: string): string {
@@ -80,4 +90,54 @@ export function aggregateBmadCommands(
 
 export function uniqueSessionCount(checkpoint: CheckpointMeta): number {
   return new Set(checkpoint.turns.map((t) => t.session_id)).size;
+}
+
+export const aggregateSlashCommands = aggregateBmadCommands;
+
+export function aggregateBmadOnlyCommands(
+  checkpoints: CheckpointMeta[],
+): Array<{ command: string; count: number }> {
+  return aggregateBmadCommands(checkpoints).filter((e) => e.command.startsWith('/bmad'));
+}
+
+export function isFirstTimeRight(checkpoint: CheckpointMeta): boolean {
+  return checkpoint.agent_lines > 0 && checkpoint.human_added === 0 && checkpoint.human_modified === 0 && checkpoint.human_removed === 0;
+}
+
+export function computeFirstTimeRightRate(checkpoints: CheckpointMeta[]): { rate: number; count: number; total: number } {
+  const eligible = checkpoints.filter((c) => c.agent_lines > 0);
+  const ftr = eligible.filter(isFirstTimeRight);
+  return {
+    rate: eligible.length > 0 ? Math.round((ftr.length / eligible.length) * 1000) / 10 : 0,
+    count: ftr.length,
+    total: eligible.length,
+  };
+}
+
+export function aggregateToolUsage(
+  checkpoints: CheckpointMeta[],
+): Array<{ tool: string; count: number }> {
+  const map = new Map<string, number>();
+  for (const cp of checkpoints) {
+    for (const [tool, count] of Object.entries(cp.tool_usage ?? {})) {
+      map.set(tool, (map.get(tool) ?? 0) + count);
+    }
+  }
+  return [...map.entries()]
+    .map(([tool, count]) => ({ tool, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function aggregateSkillUsage(
+  checkpoints: CheckpointMeta[],
+): Array<{ skill: string; count: number }> {
+  const map = new Map<string, number>();
+  for (const cp of checkpoints) {
+    for (const [skill, count] of Object.entries(cp.skill_usage ?? {})) {
+      map.set(skill, (map.get(skill) ?? 0) + count);
+    }
+  }
+  return [...map.entries()]
+    .map(([skill, count]) => ({ skill, count }))
+    .sort((a, b) => b.count - a.count);
 }

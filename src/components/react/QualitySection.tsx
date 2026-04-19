@@ -42,9 +42,11 @@ export default function QualitySection({ checkpoints }: Props) {
       <SectionHeading title="Quality Signals" />
 
       <MetricCard
-        title="Session Depth vs Agent Percentage"
-        description="Each point is a commit: x-axis shows API calls made, y-axis shows AI-authored percentage."
-        source="turns.length, agent_percentage"
+        title="Session Depth vs Agent %"
+        chartType="Scatter"
+        chartLibrary="Chart.js"
+        description="Each dot represents one checkpoint. The X-axis shows the total number of API turns (sum of turn_count across all sessions in that checkpoint) — a proxy for how long and deep the AI session was. The Y-axis shows the agent_percentage — how much of the final committed code was AI-authored. This reveals whether longer sessions produce higher-quality AI output or degrade as context windows fill up. A positive correlation (dots trending up-right) means deeper sessions yield more AI code; a flat or negative pattern suggests context degradation."
+        infoRu="Корреляция между глубиной сессии (количество обращений к модели) и долей ИИ-кода. Если точки растут вправо-вверх — длинные сессии дают больше ИИ-кода. Если тренд плоский или нисходящий — контекстное окно модели переполняется и качество падает. Важно для выбора оптимальной длины сессии."
         wide
       >
         {hasData ? (

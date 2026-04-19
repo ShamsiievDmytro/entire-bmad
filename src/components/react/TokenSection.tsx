@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { CheckpointMeta } from '../../lib/utils/ai-metrics-utils';
 import { LIGHT_CHART_OPTIONS, DATASET_COLORS } from '../../lib/light-chart-options';
 import MetricCard from './MetricCard';
 import ChartJsWrapper from './ChartJsWrapper';
-import LightweightChartWrapper from './LightweightChartWrapper';
 import SectionHeading from './SectionHeading';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 interface Props {
   checkpoints: CheckpointMeta[];
@@ -16,51 +17,55 @@ function fmtLabel(c: CheckpointMeta): string {
 }
 
 export default function TokenSection({ checkpoints }: Props) {
-  const isMulti = checkpoints.length > 1;
+  const [showCacheTokens, setShowCacheTokens] = useState(false);
 
   const sorted = useMemo(
     () => [...checkpoints].sort((a, b) => new Date(a.commit_date).getTime() - new Date(b.commit_date).getTime()),
     [checkpoints],
   );
 
-  // Metric 6: Token Breakdown — GROUPED bar (no cache_read, which dominates at 93-98%)
-  const m6Data = useMemo(() => ({
-    labels: sorted.map(fmtLabel),
-    datasets: [
+  // Chart 9: Token Breakdown — togglable cache tokens, stacked bar
+  const m9Data = useMemo(() => {
+    const datasets = [
       { label: 'Input', data: sorted.map((c) => c.tokens.input), backgroundColor: DATASET_COLORS.purple, borderRadius: 3 },
-      { label: 'Cache Creation', data: sorted.map((c) => c.tokens.cache_creation), backgroundColor: DATASET_COLORS.cyan, borderRadius: 3 },
+      ...(showCacheTokens
+        ? [
+            { label: 'Cache Creation', data: sorted.map((c) => c.tokens.cache_creation), backgroundColor: DATASET_COLORS.cyan, borderRadius: 3 },
+            { label: 'Cache Read', data: sorted.map((c) => c.tokens.cache_read), backgroundColor: DATASET_COLORS.gray, borderRadius: 3 },
+          ]
+        : []),
       { label: 'Output', data: sorted.map((c) => c.tokens.output), backgroundColor: DATASET_COLORS.amber, borderRadius: 3 },
-    ],
-  }), [sorted]);
-  const m6Options = useMemo(() => ({
+    ];
+    return { labels: sorted.map(fmtLabel), datasets };
+  }, [sorted, showCacheTokens]);
+
+  const m9Options = useMemo(() => ({
     ...LIGHT_CHART_OPTIONS,
     plugins: {
       ...LIGHT_CHART_OPTIONS.plugins,
       legend: { display: true, labels: { color: '#555', font: { family: 'Inter' } } },
     },
+    scales: {
+      ...LIGHT_CHART_OPTIONS.scales,
+      x: { ...LIGHT_CHART_OPTIONS.scales.x, stacked: true },
+      y: { ...LIGHT_CHART_OPTIONS.scales.y, stacked: true },
+    },
   }), []);
 
-  // Metric 7: Cache Leverage Score (LWC line)
-  const m7Series = useMemo(
-    () =>
-      sorted.map((c) => {
-        const total = c.tokens.input + c.tokens.cache_creation + c.tokens.cache_read + c.tokens.output;
-        return {
-          time: Math.floor(new Date(c.commit_date).getTime() / 1000) as any,
-          value: total > 0 ? Math.round((c.tokens.cache_read / total) * 1000) / 10 : 0,
-        };
-      }),
-    [sorted],
-  );
-
-  // Metric 8: API Call Count
-  const m8Data = useMemo(() => ({
+  // Chart 11: API Call Count — sum of turn_count across all turns per checkpoint
+  const m11Data = useMemo(() => ({
     labels: sorted.map(fmtLabel),
     datasets: [{ data: sorted.map((c) => c.turns.reduce((sum, t) => sum + t.turn_count, 0)), backgroundColor: DATASET_COLORS.purple, borderRadius: 3 }],
   }), [sorted]);
 
-  // Metric 9: Model Distribution (doughnut)
-  const m9 = useMemo(() => {
+  // Prompts per Checkpoint — count of turn entries (turns.length)
+  const promptsData = useMemo(() => ({
+    labels: sorted.map(fmtLabel),
+    datasets: [{ data: sorted.map((c) => c.turns.length), backgroundColor: DATASET_COLORS.teal, borderRadius: 3 }],
+  }), [sorted]);
+
+  // Chart 12: Model Distribution (doughnut)
+  const m12 = useMemo(() => {
     const modelMap = new Map<string, number>();
     for (const cp of checkpoints) {
       for (const t of cp.turns) {
@@ -79,11 +84,11 @@ export default function TokenSection({ checkpoints }: Props) {
     };
   }, [checkpoints]);
 
-  const m9Data = useMemo(() => ({
-    labels: m9.labels,
-    datasets: [{ data: m9.values, backgroundColor: m9.colors, borderWidth: 0 }],
-  }), [m9]);
-  const m9Options = useMemo(() => ({
+  const m12Data = useMemo(() => ({
+    labels: m12.labels,
+    datasets: [{ data: m12.values, backgroundColor: m12.colors, borderWidth: 0 }],
+  }), [m12]);
+  const m12Options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -97,36 +102,51 @@ export default function TokenSection({ checkpoints }: Props) {
       <SectionHeading title="Token Economics" />
 
       <MetricCard
-        title="Token Breakdown per Commit"
-        description="Input, cache creation, and output tokens per commit. Cache read tokens (93-98% of total) are shown separately in the Cache Leverage chart."
-        source="tokens.input, tokens.cache_creation, tokens.output"
+        title="Token Breakdown"
+        chartType="Stacked bar"
+        chartLibrary="Chart.js"
+        description="Stacked bar showing token consumption per checkpoint. Each bar is split into segments: Input tokens (purple) are the prompt tokens sent to the model, Output tokens (amber) are the tokens generated by the model. When the toggle is on, Cache Creation (cyan) and Cache Read (gray) tokens are also shown — cache reads typically dominate at 93-98% of total, so they are hidden by default to keep input/output visible."
+        infoRu="Расход токенов на каждый коммит. Input — токены промпта, отправленные модели. Output — токены, сгенерированные моделью. Кэш-токены скрыты по умолчанию (93-98% от общего объёма). Метрика важна для контроля стоимости: показывает, сколько ресурсов потребляет каждый коммит."
         wide
       >
         {sorted.length > 0 ? (
-          <ChartJsWrapper id="metric-6" type="bar" data={m6Data} options={m6Options} height={220} />
+          <>
+            <FormControlLabel
+              control={<Switch checked={showCacheTokens} onChange={(_, checked) => setShowCacheTokens(checked)} size="small" />}
+              label="Include cache tokens (cache reads dominate 93-98% of total)"
+              slotProps={{ typography: { variant: 'caption', color: 'text.secondary' } }}
+              sx={{ mb: 1 }}
+            />
+            <ChartJsWrapper id="metric-9" type="bar" data={m9Data} options={m9Options} height={220} />
+          </>
         ) : (
           <NoData />
         )}
       </MetricCard>
 
-      {isMulti && (
-        <MetricCard
-          title="Cache Leverage Score"
-          description="Ratio of cache-read tokens to total tokens per commit over time."
-          source="tokens.cache_read, total_tokens, commit_date"
-          wide
-        >
-          <LightweightChartWrapper id="metric-7" series={m7Series} lineColor={DATASET_COLORS.green} height={200} />
-        </MetricCard>
-      )}
-
       <MetricCard
         title="API Call Count"
-        description="Number of turns (API calls) made per commit."
-        source="turns.length"
+        chartType="Bar"
+        chartLibrary="Chart.js"
+        description="Total number of API turns made per checkpoint, calculated as the sum of turn_count across all sessions in each checkpoint. A high value means the AI agent made many back-and-forth calls with the model. Useful alongside token charts to distinguish chatty sessions (many calls, few tokens each) from deep-reasoning sessions (few calls, many tokens each)."
+        infoRu="Общее количество обращений к модели за коммит. Много вызовов с малым числом токенов — «болтливая» сессия. Мало вызовов с большим числом токенов — глубокий анализ. Помогает выявить неэффективные паттерны работы с ИИ."
       >
         {sorted.length > 0 ? (
-          <ChartJsWrapper id="metric-8" type="bar" data={m8Data} options={LIGHT_CHART_OPTIONS} height={180} />
+          <ChartJsWrapper id="metric-11" type="bar" data={m11Data} options={LIGHT_CHART_OPTIONS} height={180} />
+        ) : (
+          <NoData />
+        )}
+      </MetricCard>
+
+      <MetricCard
+        title="Prompts per Checkpoint"
+        chartType="Bar"
+        chartLibrary="Chart.js"
+        description="Count of distinct prompt turn entries (turns.length) per checkpoint — the number of times a user or system sent a prompt to the AI agent. This is different from API Call Count which sums the internal turn_count depth. Directly maps to request-based billing models (e.g., GitHub Copilot charges per request, not per token)."
+        infoRu="Количество промптов (запросов) на коммит. Напрямую связано с биллингом по количеству запросов (например, GitHub Copilot тарифицирует по запросам, а не по токенам). Позволяет прогнозировать расходы при request-based тарификации."
+      >
+        {sorted.length > 0 ? (
+          <ChartJsWrapper id="metric-prompts" type="bar" data={promptsData} options={LIGHT_CHART_OPTIONS} height={180} />
         ) : (
           <NoData />
         )}
@@ -134,11 +154,13 @@ export default function TokenSection({ checkpoints }: Props) {
 
       <MetricCard
         title="Model Distribution"
-        description="Frequency of each model used across all turns in all commits."
-        source="turns[].model"
+        chartType="Doughnut"
+        chartLibrary="Chart.js"
+        description="Doughnut chart showing the frequency of each LLM model used across all turns in all selected checkpoints. Each slice represents a model (e.g., claude-opus-4-6, claude-sonnet-4-6) sized by how many turns used that model. Reveals whether premium models are overused for simple tasks and helps identify which models to standardize on for cost control."
+        infoRu="Распределение использования моделей ИИ (Opus, Sonnet, Haiku и др.). Показывает, не переплачивает ли команда, используя дорогие модели для простых задач. Помогает принять решение о стандартизации на оптимальной модели."
       >
-        {m9.hasData ? (
-          <ChartJsWrapper id="metric-9" type="doughnut" data={m9Data} options={m9Options} height={200} />
+        {m12.hasData ? (
+          <ChartJsWrapper id="metric-12" type="doughnut" data={m12Data} options={m12Options} height={200} />
         ) : (
           <NoData />
         )}
