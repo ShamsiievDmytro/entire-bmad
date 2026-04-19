@@ -1,0 +1,59 @@
+please review new @docs/CHARTS.md file
+I would like to try to implement each chart from the file, replace current charts with the ones described in the document. 
+Please on the UI keep descriptiom, how it is build, what is used, What it shows / why it matters descriptions 
+Please choose charts types to be very User friendly and readble
+For tokens usage add posibility to turn off chached tokens visualisation to make more visible output and input tokens spent 
+Also please add chart to show how many propts done per checkpoint, so for example in the copilot they are charging for the requests not tokens, so we need to ensure that we can see that information on the board
+
+---
+
+1)please review descriptions of the charts, some of them are just showing why it is metters and not what it is showing with details 
+2)Can we review Agent % Over Time I dont understand why it is shows 0 on 17 of april and no data for today? it is looks uninformative, we must make it more shmoose maybe we need to make it like mooving avarnge 3 days 
+3)First-Time-Right Rate why it showing only 10 checkpoints 
+4)please remove Cache Leverage Score
+5)add detailed description for Session Depth vs Agent %
+6)What this chart shows? Top-N Skills Invoked, looks like it is tools invoked by agents and not but human correct ? 
+7)Please remove Commit Activity Timeline
+8)Does it make sense to update Checkpoint Cadence from minutes to hours ? 
+9) Attribution Trend (Rolling Avg) this chart looks realy usefull, could you extend how it is calculated and move to the top of the page 
+
+also please ensure that all descriptions of the charts are detailed and in place and how it is calculated
+
+---
+
+it is done ?
+
+---
+
+review First-Time-Right Rate it is looks not correct , why 9 of 9 ?
+
+---
+
+Looks like Subagent Usage Timeline , Top-N Skills Invoked , Tool Usage Mix are broken now, please review they toped showing data
+
+---
+
+[Image #1]
+please review and ensure that we are using all data
+
+---
+
+Refresh failed: HTTP 403 for https://api.github.com/repos/ShamsiievDmytro/entire-bmad/git/trees/entire%2Fcheckpoints%2Fv1?recursive=1
+
+---
+
+how to crete token ?
+
+---
+
+is it failed ?
+
+---
+
+done, please using playwrite ensure that all charts looks good
+
+---
+
+1)can we update chart for First-Time-Right Rate to make it moving avarage with 3 commits avarange 
+2)Remove Attribution Trend (Rolling Avg)
+3)Could you please implement information icon for each chart and add description in russian, describe what this chart shows and why it is metter as metric, in howe to the icon there must be information window with russian description

@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "7c4d732e26f8",
+  "strategy": "manual-commit",
+  "branch": "mui",
+  "checkpoints_count": 11,
+  "files_touched": [
+    ".playwright-mcp/console-2026-04-19T21-14-17-701Z.log",
+    ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log",
+    ".playwright-mcp/page-2026-04-19T21-14-17-950Z.yml",
+    ".playwright-mcp/page-2026-04-19T21-24-13-280Z.yml",
+    ".playwright-mcp/page-2026-04-19T21-24-41-142Z.yml",
+    "dashboard-full.png",
+    "final-top.png",
+    "info-popover-ru.png",
+    "scripts/fetch-checkpoints.ts",
+    "scripts/types.ts",
+    "section-1-header-attribution.png",
+    "section-10-toolmix-skills.png",
+    "section-11-skills-subagent.png",
+    "section-2-agent-pureai.png",
+    "section-3-avg-ftr.png",
+    "section-4-tokens.png",
+    "section-5-quality-behavioral.png",
+    "section-6-bmad-prompt-files.png",
+    "section-7-tools-skills.png",
+    "section-8-tool-skills-subagent.png",
+    "section-9-tool-skills-sub.png",
+    "src/components/react/AttributionSection.tsx",
+    "src/components/react/BehavioralSection.tsx",
+    "src/components/react/MetricCard.tsx",
+    "src/components/react/QualitySection.tsx",
+    "src/components/react/StatCard.tsx",
+    "src/components/react/TemporalSection.tsx",
+    "src/components/react/TokenSection.tsx",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/lib/utils/github-checkpoints.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7c/4d732e26f8/0/metadata.json",
+      "transcript": "/7c/4d732e26f8/0/full.jsonl",
+      "content_hash": "/7c/4d732e26f8/0/content_hash.txt",
+      "prompt": "/7c/4d732e26f8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 187,
+    "cache_creation_tokens": 219671,
+    "cache_read_tokens": 22348983,
+    "output_tokens": 68979,
+    "api_call_count": 148
+  }
+}

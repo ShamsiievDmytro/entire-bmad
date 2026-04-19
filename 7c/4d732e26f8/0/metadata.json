@@ -1,0 +1,202 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "7c4d732e26f8",
+  "session_id": "ff2d2875-e1ed-41dc-bec6-80ad2b1428ca",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-19T21:26:10.181433Z",
+  "branch": "mui",
+  "checkpoints_count": 11,
+  "files_touched": [
+    ".playwright-mcp/console-2026-04-19T21-14-17-701Z.log",
+    ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log",
+    ".playwright-mcp/page-2026-04-19T21-14-17-950Z.yml",
+    ".playwright-mcp/page-2026-04-19T21-24-13-280Z.yml",
+    ".playwright-mcp/page-2026-04-19T21-24-41-142Z.yml",
+    "dashboard-full.png",
+    "final-top.png",
+    "info-popover-ru.png",
+    "scripts/fetch-checkpoints.ts",
+    "scripts/types.ts",
+    "section-1-header-attribution.png",
+    "section-10-toolmix-skills.png",
+    "section-11-skills-subagent.png",
+    "section-2-agent-pureai.png",
+    "section-3-avg-ftr.png",
+    "section-4-tokens.png",
+    "section-5-quality-behavioral.png",
+    "section-6-bmad-prompt-files.png",
+    "section-7-tools-skills.png",
+    "section-8-tool-skills-subagent.png",
+    "section-9-tool-skills-sub.png",
+    "src/components/react/AttributionSection.tsx",
+    "src/components/react/BehavioralSection.tsx",
+    "src/components/react/MetricCard.tsx",
+    "src/components/react/QualitySection.tsx",
+    "src/components/react/StatCard.tsx",
+    "src/components/react/TemporalSection.tsx",
+    "src/components/react/TokenSection.tsx",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/lib/utils/github-checkpoints.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "a23ef37b2fd1",
+  "token_usage": {
+    "input_tokens": 187,
+    "cache_creation_tokens": 219671,
+    "cache_read_tokens": 22348983,
+    "output_tokens": 68979,
+    "api_call_count": 148
+  },
+  "session_metrics": {
+    "turn_count": 11
+  },
+  "summary": {
+    "intent": "Implement a comprehensive set of new charts for the AI metrics dashboard based on a CHARTS.md specification, replacing existing charts with more detailed, user-friendly visualizations including token toggles, tool usage tracking, Russian-language info tooltips, and prompts-per-checkpoint billing visibility.",
+    "outcome": "All 21 charts were implemented and verified via Playwright, with Russian info popovers on every card, 3-commit rolling averages for smoothing, tool/skill/subagent usage extracted from JSONL transcripts, and a corrected First-Time-Right Rate metric. Build passes with 159/159 tests.",
+    "learnings": {
+      "repo": [
+        "Checkpoint data is cached in src/data/checkpoints-cache.json at build time; the browser refresh button hits unauthenticated GitHub API (60 req/hour limit) and fails with 403 on private repos — must use GITHUB_TOKEN env var with the CLI script instead.",
+        "JSONL transcripts contain full assistant messages with content arrays including tool_use blocks, enabling extraction of tool names, Skill IDs, and subagent counts without any pipeline changes beyond extending extractTranscriptData().",
+        "MUI v9 Typography does not accept layout props (display, mb, mt) directly — they must be passed via the sx prop.",
+        "filterRenderableCheckpoints in ai-metrics-utils.ts is the right place to normalize/backfill missing fields when loading old cached data that predates new schema fields.",
+        "The project uses Chart.js (via ChartJsWrapper) and lightweight-charts (via LightweightChartWrapper) as two separate charting libraries depending on chart type.",
+        "BMAD command filtering required a separate chart filtered to bmad* prefix, distinct from the general Slash Command Frequency chart."
+      ],
+      "code": [
+        {
+          "path": "scripts/fetch-checkpoints.ts",
+          "line": 25,
+          "end_line": 25,
+          "finding": "Bug: referenced `checkpoints.length` instead of `cache.checkpoints.length`, causing 'checkpoints is not defined' runtime error."
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "finding": "isFirstTimeRight() originally only checked human_modified===0 and human_removed===0, producing 100% rate. Must also require human_added===0 for a truly pristine AI-only commit."
+        },
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "finding": "parseMetadata uses Omit type that needed updating when new fields (tool_usage, skill_usage, subagent_count) were added to CheckpointMeta."
+        },
+        {
+          "path": "src/components/react/AttributionSection.tsx",
+          "finding": "FTR sparkline must filter to only agent_lines \u003e 0 checkpoints to match the stat denominator — mixing eligible and ineligible checkpoints caused a 10 vs 9 mismatch."
+        }
+      ],
+      "workflow": [
+        "Playwright MCP was used for visual chart verification — navigate, screenshot, evaluate(window.scrollTo), and snapshot tools were combined to inspect all sections.",
+        "When adding new data fields to a cached JSON schema, always backfill defaults at the consumption layer (not just the generation layer) to avoid breaking existing cache files.",
+        "Running `GITHUB_TOKEN=\u003ctoken\u003e npx tsx scripts/fetch-checkpoints.ts` is the correct way to refresh data for private repos, not the browser refresh button.",
+        "Pre-existing TypeScript errors in a codebase should be verified via git diff before attributing them to new changes — avoids wasted fix attempts."
+      ]
+    },
+    "friction": [
+      "GitHub API 403 error during browser refresh — unauthenticated rate limit hit on private repo; required switching to CLI script with token.",
+      "fetch-checkpoints.ts had a pre-existing bug (checkpoints vs cache.checkpoints) that only surfaced when the script was actually run.",
+      "Old cached JSON silently broke the three new JSONL-derived charts (Tool Usage Mix, Top-N Skills, Subagent Timeline) because undefined fields weren't backfilled — required a separate normalization fix.",
+      "FTR metric showed 9/9 (100%) initially because the definition was too lenient — human_added lines were not counted as modifications, requiring a logic fix and description update.",
+      "FTR sparkline/stat mismatch (10 points vs '1 of 9') required a separate fix to align sparkline filtering with stat denominator."
+    ],
+    "open_items": [
+      "Browser refresh button still uses unauthenticated GitHub API — no token support added to the UI; private repo users must always use the CLI script.",
+      "Tool Usage Mix, Top-N Skills, and Subagent Timeline charts show 'No data' on old cached JSON — users must refresh cache to see these charts populated.",
+      "Pre-existing MUI v9 Typography TypeScript errors (tokensRaw typing in parseMetadata) were left unresolved as they predated this work.",
+      "Checkpoint Cadence chart converted to hours but no consideration given to sub-hour cadence display precision for very frequent commits."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-19T21:25:40.537Z",
+    "agent_lines": 1199,
+    "agent_removed": 223,
+    "human_added": 3,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1202,
+    "total_lines_changed": 1425,
+    "agent_percentage": 99.78947368421053,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 85,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "docs/CHARTS.md": 85
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 485,
+      "agent_lines_removed": 116
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 508,
+      "agent_lines_removed": 215
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 508,
+      "agent_lines_removed": 215
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 508,
+      "agent_lines_removed": 215
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 519,
+      "agent_lines_removed": 216
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 519,
+      "agent_lines_removed": 216
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 519,
+      "agent_lines_removed": 216
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 519,
+      "agent_lines_removed": 216
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 520,
+      "agent_lines_removed": 217
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 722,
+      "agent_lines_removed": 217
+    }
+  ]
+}
