@@ -1,0 +1,24 @@
+docs/git-ai-reference.md
+  c4c09426203e4095 1-787
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "83d54a996df42bdc23edb2e5b3d7ea3c2dbb3c0a",
+  "prompts": {
+    "c4c09426203e4095": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bb5159a3-9718-4f7f-a947-a09483de3284",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 787,
+      "total_deletions": 3,
+      "accepted_lines": 787,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/e8f5bdfe4679c23e90a369b50dcbcd457f18cbb1b653ea0b623f2e033c9fe561"
+    }
+  }
+}
