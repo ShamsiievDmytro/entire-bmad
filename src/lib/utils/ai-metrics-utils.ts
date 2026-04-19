@@ -2,32 +2,6 @@ import type { CheckpointMeta, CheckpointsCache, TurnMeta } from '../../../script
 
 export type { CheckpointMeta, CheckpointsCache, TurnMeta };
 
-export const DARK_CHART_OPTIONS = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false, labels: { color: '#a0a0b0', font: { family: 'Inter' } } },
-    tooltip: {
-      backgroundColor: '#12121a',
-      titleColor: '#f0f0f0',
-      bodyColor: '#a0a0b0',
-      borderColor: 'rgba(255,255,255,0.08)',
-      borderWidth: 1,
-    },
-  },
-  scales: {
-    x: {
-      grid: { color: 'rgba(255,255,255,0.03)' },
-      ticks: { color: '#a0a0b0', font: { family: 'Inter', size: 11 } },
-      border: { display: false },
-    },
-    y: {
-      grid: { color: 'rgba(255,255,255,0.03)' },
-      ticks: { color: '#a0a0b0', font: { family: 'Inter', size: 11 } },
-      border: { display: false },
-    },
-  },
-};
 
 export function computeRollingAverage(values: number[], window: number): number[] {
   const w = Math.max(1, window);

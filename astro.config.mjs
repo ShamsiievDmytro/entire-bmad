@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
 /** @type {import('astro').AstroIntegration} */
@@ -21,9 +22,12 @@ const checkpointsCacheGuard = {
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [checkpointsCacheGuard],
+  integrations: [checkpointsCacheGuard, react()],
   output: 'static',
   vite: {
-    plugins: [tailwindcss()]
-  }
+    plugins: [tailwindcss()],
+    ssr: {
+      noExternal: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+    },
+  },
 });
