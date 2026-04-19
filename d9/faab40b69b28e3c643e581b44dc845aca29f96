@@ -1,0 +1,58 @@
+src/components/react/QualitySection.tsx
+  e29591a20a951f06 1-66
+src/components/react/AttributionSection.tsx
+  e29591a20a951f06 1-137
+src/components/react/AiMetricsDashboard.tsx
+  e29591a20a951f06 1-180
+src/components/react/BehavioralSection.tsx
+  e29591a20a951f06 1-169
+src/components/react/SectionHeading.tsx
+  e29591a20a951f06 1-26
+tsconfig.json
+  e29591a20a951f06 3-5
+src/components/react/LightweightChartWrapper.tsx
+  e29591a20a951f06 1-81
+src/lib/light-chart-options.ts
+  e29591a20a951f06 1-52
+package.json
+  e29591a20a951f06 20-22,25-26,34-35,39-40
+src/layouts/AiMetricsLayout.astro
+  e29591a20a951f06 12,18
+astro.config.mjs
+  e29591a20a951f06 6,25,28-32
+src/components/react/ChartJsWrapper.tsx
+  e29591a20a951f06 1-37
+src/components/react/TokenSection.tsx
+  e29591a20a951f06 1-156
+src/pages/ai-metrics.astro
+  e29591a20a951f06 5,7,25-30
+src/lib/mui-theme.ts
+  e29591a20a951f06 1-53
+src/components/react/MetricCard.tsx
+  e29591a20a951f06 1-33
+src/components/react/StatCard.tsx
+  e29591a20a951f06 1-64
+src/components/react/TemporalSection.tsx
+  e29591a20a951f06 1-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "d9faab40b69b28e3c643e581b44dc845aca29f96",
+  "prompts": {
+    "e29591a20a951f06": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "937e54cc-8a5d-4041-bb51-335ecf7463e8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 1231,
+      "total_deletions": 241,
+      "accepted_lines": 1231,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/dd7bb4d4bc6464f37906df6f0dba0a6f46592b5e7b57a78f76e29318541a86c0"
+    }
+  }
+}
