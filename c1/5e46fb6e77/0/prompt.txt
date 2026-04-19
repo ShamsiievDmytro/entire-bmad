@@ -1,0 +1,3 @@
+I want to rebuild current view of the metricts to MUI components and make it light theme 
+also review all current charts we have, review tokens spent chart as because cached tokens value is too hight it is not viewvable hom may other tokens spent. we need to make a separate chart or choose more better one for current chart, also replace checkpoint word with commite, as it is representing one commite in the Entire world. 
+Please ensure that design is build according to the MUI best practices and color schemas.

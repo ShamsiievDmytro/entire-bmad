@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "c15e46fb6e77",
+  "strategy": "manual-commit",
+  "branch": "mui",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "astro.config.mjs",
+    "package-lock.json",
+    "package.json",
+    "src/components/AiAttributionSection.astro",
+    "src/components/AiBehavioralSection.astro",
+    "src/components/AiQualitySection.astro",
+    "src/components/AiTemporalSection.astro",
+    "src/components/AiTokenSection.astro",
+    "src/components/react/AiMetricsDashboard.tsx",
+    "src/components/react/AttributionSection.tsx",
+    "src/components/react/BehavioralSection.tsx",
+    "src/components/react/ChartJsWrapper.tsx",
+    "src/components/react/LightweightChartWrapper.tsx",
+    "src/components/react/MetricCard.tsx",
+    "src/components/react/QualitySection.tsx",
+    "src/components/react/SectionHeading.tsx",
+    "src/components/react/StatCard.tsx",
+    "src/components/react/TemporalSection.tsx",
+    "src/components/react/TokenSection.tsx",
+    "src/layouts/AiMetricsLayout.astro",
+    "src/lib/light-chart-options.ts",
+    "src/lib/mui-theme.ts",
+    "src/lib/utils/ai-dashboard-renderer.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/pages/ai-metrics.astro",
+    "tsconfig.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c1/5e46fb6e77/0/metadata.json",
+      "transcript": "/c1/5e46fb6e77/0/full.jsonl",
+      "content_hash": "/c1/5e46fb6e77/0/content_hash.txt",
+      "prompt": "/c1/5e46fb6e77/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1206,
+    "cache_creation_tokens": 121584,
+    "cache_read_tokens": 4237046,
+    "output_tokens": 29193,
+    "api_call_count": 45
+  }
+}
