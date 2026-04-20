@@ -1,0 +1,54 @@
+src/components/react/AiMetricsDashboard.tsx
+  0b7268e23bcacba1 12,41-43,58-62,64-76,113-114,118,130,134,145,151-204
+  1c5b00a7564c9b3b 23,228
+src/components/react/AttributionSection.tsx
+  0b7268e23bcacba1 40-75,109,113-120,140-152,208
+src/components/react/QualityDebtSection.tsx
+  1c5b00a7564c9b3b 1-266
+src/lib/utils/ai-metrics-utils.test.ts
+  0b7268e23bcacba1 35
+src/lib/utils/github-checkpoints.ts
+  1c5b00a7564c9b3b 325,338,348,366-368,510-517,570
+  0b7268e23bcacba1 246,441-466,578,599
+docs/CHARTS.md
+  1c5b00a7564c9b3b 13-64,68,70,72-79,81,83,85
+scripts/types.ts
+  0b7268e23bcacba1 42
+src/lib/utils/ai-metrics-utils.ts
+  0b7268e23bcacba1 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "84c76a59d3235c439aa00ec3be25f3efbd6c28ee",
+  "prompts": {
+    "0b7268e23bcacba1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff2d2875-e1ed-41dc-bec6-80ad2b1428ca",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 189,
+      "total_deletions": 58,
+      "accepted_lines": 1035,
+      "overriden_lines": 9,
+      "messages_url": "https://usegitai.com/cas/e141b429db0dbd06d399f224d24e63bce6c28d4efb83b80507fb00222eda1adb"
+    },
+    "1c5b00a7564c9b3b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "322439c1-496a-4c21-8bcb-f6b3ce121392",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmytro Shamsiiev",
+      "messages": [],
+      "total_additions": 374,
+      "total_deletions": 91,
+      "accepted_lines": 350,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/dfaa305e8579d7dc770c45a15d68df6c3f18d9a77c4827efb4935f46b48024c7"
+    }
+  }
+}
