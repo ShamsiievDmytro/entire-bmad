@@ -1,0 +1,144 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "ec227c481d0b",
+  "session_id": "322439c1-496a-4c21-8bcb-f6b3ce121392",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-20T08:38:32.220467Z",
+  "branch": "mui",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log",
+    "CHARTS.md",
+    "docs/CHARTS.md",
+    "scripts/types.ts",
+    "src/components/react/AiMetricsDashboard.tsx",
+    "src/components/react/AttributionSection.tsx",
+    "src/components/react/QualityDebtSection.tsx",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/lib/utils/github-checkpoints.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-6[1m]",
+  "turn_id": "cbff4e51b9a8",
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 119183,
+    "cache_read_tokens": 4392546,
+    "output_tokens": 21840,
+    "api_call_count": 58
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "summary": {
+    "intent": "Implement two new charts (Friction Events and Open Items per Checkpoint) on the metrics dashboard, then consolidate three scattered chart documentation files into one authoritative doc under docs/.",
+    "outcome": "Both charts were implemented in a new QualityDebtSection component, documentation was consolidated and later re-audited to match the actual implementation, and a bug preventing the new charts from showing data was found and fixed (summary field was in session-level metadata, not top-level).",
+    "learnings": {
+      "repo": [
+        "The `summary` field (friction/open_items) lives in session-level metadata.json (e.g. `01/60328b41c7/0/metadata.json`), NOT in the top-level checkpoint metadata.json.",
+        "Each section component (AttributionSection, TokenSection, etc.) duplicates a local `fmtLabel` helper rather than sharing one — established pattern in this codebase.",
+        "There is no `commit_message` field in checkpoint data; labels are date-based only.",
+        "Charts 21, 22, 23 were fully implemented despite being listed as 'proposed' in the old documentation — docs had drifted significantly from implementation.",
+        "Cache Leverage Score (Chart 10), Commit Activity Timeline (Chart 18), and Attribution Trend (Chart 20) were removed from implementation but remained in docs.",
+        "Three undocumented charts existed in code: AI Usage by Developer, Prompts per Checkpoint, and BMAD Command Frequency."
+      ],
+      "code": [
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "line": 554,
+          "end_line": 554,
+          "finding": "Live fetch path hardcoded `summary: { friction: [], open_items: [] }` — the field was never populated even though topMeta was already fetched."
+        },
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "line": 468,
+          "end_line": 468,
+          "finding": "Top-level checkpoint metadata.json is fetched here as `topMeta` but does NOT contain summary data; summary is in session-level metadata."
+        },
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "line": 242,
+          "end_line": 242,
+          "finding": "`parseMetadata` correctly handles summary.friction and summary.open_items but is only used on the cached/pre-parsed path, not the live fetch path."
+        }
+      ],
+      "workflow": [
+        "When adding a new data field to displayed charts, always trace the full data pipeline from fetch → parse → component to confirm the field isn't silently dropped at an intermediate step.",
+        "After significant refactoring, audit docs against implementation rather than assuming they're in sync — in this project docs had multiple phantom entries and missing entries.",
+        "Pre-existing TypeScript errors in unrelated files can obscure whether new code introduced errors; grep for the new file specifically to confirm it's clean."
+      ]
+    },
+    "friction": [
+      "The fix for empty charts required two iterations: first attempt incorrectly targeted top-level checkpoint metadata, second attempt correctly identified session-level metadata as the source.",
+      "The user had to share a screenshot to confirm the first fix didn't work — no automated way to verify runtime data population from the build.",
+      "Three separate chart documentation files existed with overlapping and conflicting content, requiring a full audit pass."
+    ],
+    "open_items": [
+      "The `fmtLabel` helper is duplicated across all section components — could be extracted to a shared utility.",
+      "No automated test coverage for the session-level summary parsing added to `parseSessionMeta`.",
+      "The dashboard has no integration/e2e test that verifies charts render with real data shapes."
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-20T08:38:11.878495Z",
+    "agent_lines": 291,
+    "agent_removed": 109,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 48,
+    "total_committed": 291,
+    "total_lines_changed": 1247,
+    "agent_percentage": 32.076984763432236,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 901,
+      "user_lines_removed": 42,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log": 4,
+        ".playwright-mcp/console-2026-04-19T21-38-35-898Z.log": 5,
+        ".playwright-mcp/console-2026-04-19T21-41-15-375Z.log": 2,
+        ".playwright-mcp/page-2026-04-19T21-38-36-255Z.yml": 257,
+        ".playwright-mcp/page-2026-04-19T21-41-15-602Z.yml": 269,
+        "docs/CHARTS-25-26-friction-open-items.md": 191,
+        "scripts/types.ts": 1,
+        "src/components/react/AiMetricsDashboard.tsx": 82,
+        "src/components/react/AttributionSection.tsx": 59,
+        "src/lib/utils/ai-metrics-utils.test.ts": 1,
+        "src/lib/utils/ai-metrics-utils.ts": 1,
+        "src/lib/utils/github-checkpoints.ts": 29
+      },
+      "user_removed_per_file": {
+        "src/components/react/AiMetricsDashboard.tsx": 32,
+        "src/components/react/AttributionSection.tsx": 8,
+        "src/lib/utils/github-checkpoints.ts": 2
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 998,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1033,
+      "agent_lines_removed": 150
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1040,
+      "agent_lines_removed": 151
+    }
+  ]
+}

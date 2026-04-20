@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "ec227c481d0b",
+  "strategy": "manual-commit",
+  "branch": "mui",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log",
+    "CHARTS.md",
+    "docs/CHARTS.md",
+    "scripts/types.ts",
+    "src/components/react/AiMetricsDashboard.tsx",
+    "src/components/react/AttributionSection.tsx",
+    "src/components/react/QualityDebtSection.tsx",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/lib/utils/github-checkpoints.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ec/227c481d0b/0/metadata.json",
+      "transcript": "/ec/227c481d0b/0/full.jsonl",
+      "content_hash": "/ec/227c481d0b/0/content_hash.txt",
+      "prompt": "/ec/227c481d0b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70,
+    "cache_creation_tokens": 119183,
+    "cache_read_tokens": 4392546,
+    "output_tokens": 21840,
+    "api_call_count": 58
+  }
+}

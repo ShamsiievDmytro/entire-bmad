@@ -1,0 +1,22 @@
+I have two additional charts to implement 
+they are described in the document /Users/dmytroshamsiiev/Projects/metrics/docs/CHARTS-25-26-friction-open-items.md
+Please do not pay attention that they are numbered. 
+Implement them as additional charts on the UI with proper section, and additional data we have for other charts. 
+After the implementation please cleanup current charts documents, currently we have 3 
+@CHARTS.md @docs/CHARTS.md and @docs/CHARTS-25-26-friction-open-items.md  in the end I want to have one document under the @docs/ folder with full information what charts we have in the our solution in the current stage
+
+---
+
+we performed some updates and cleanup on the dashboard, please ensure that document is describing all charts from the implementation, currently implementation is the source of thruth
+
+---
+
+Friction Events per Checkpoint
+and 
+Open Items per Checkpoint
+are emptym but I fetched latest checkpoints from the github 
+could you please check if we parse properly
+
+---
+
+[Image #1]
