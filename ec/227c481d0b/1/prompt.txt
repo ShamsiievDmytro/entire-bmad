@@ -1,0 +1,14 @@
+it is possible to add AI usage by person who commited, so to also fetch name of the developer ?
+
+---
+
+[Image #2]
+top bar looks missaligned, please check using playwrite and align components to looks good
+
+---
+
+can we add one more dropdown to add periods, like datepicker from to to filter checkpoints
+
+---
+
+Looks like chart for First-Time-Right Rate must be inverted, as proper value is 33.3 but on the chart it is 66.7

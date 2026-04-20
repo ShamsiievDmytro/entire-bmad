@@ -1,0 +1,123 @@
+{
+  "cli_version": "0.5.5",
+  "checkpoint_id": "ec227c481d0b",
+  "session_id": "ff2d2875-e1ed-41dc-bec6-80ad2b1428ca",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-20T08:38:47.896383Z",
+  "branch": "mui",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".playwright-mcp/console-2026-04-19T21-24-12-971Z.log",
+    "scripts/types.ts",
+    "src/components/react/AiMetricsDashboard.tsx",
+    "src/components/react/AttributionSection.tsx",
+    "src/lib/utils/ai-metrics-utils.test.ts",
+    "src/lib/utils/ai-metrics-utils.ts",
+    "src/lib/utils/github-checkpoints.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "d6c3b953c8f7",
+  "checkpoint_transcript_start": 483,
+  "transcript_lines_at_start": 483,
+  "token_usage": {
+    "input_tokens": 57,
+    "cache_creation_tokens": 292860,
+    "cache_read_tokens": 11581204,
+    "output_tokens": 16475,
+    "api_call_count": 49
+  },
+  "session_metrics": {
+    "turn_count": 15
+  },
+  "summary": {
+    "intent": "Add per-developer AI usage attribution to the metrics dashboard, plus date range filtering and a chart alignment fix.",
+    "outcome": "Developer identity is fetched from the GitHub Commits API and surfaced in a dropdown and 'AI Usage by Developer' chart; date range pickers filter all charts; header layout was restructured into rows to fix alignment; FTR sparkline was changed to cumulative rate.",
+    "learnings": {
+      "repo": [
+        "checkpoint_ids are git commit SHA prefixes — author info can be resolved via GitHub Commits API during the fetch step",
+        "MUI date picker package (@mui/x-date-pickers) is not installed; native HTML date inputs via MUI TextField type='date' are used instead",
+        "The project is a single-developer repo (all 19 checkpoints map to 'Dmytro Shamsiiev'), but the author feature is designed for multi-dev teams"
+      ],
+      "code": [
+        {
+          "path": "src/lib/utils/github-checkpoints.ts",
+          "finding": "Author field is fetched from the GitHub Commits API after the tree API call and mapped by commit SHA prefix; error checkpoints fall back to 'unknown'"
+        },
+        {
+          "path": "src/lib/utils/ai-metrics-utils.ts",
+          "finding": "Normalizer backfills author field from checkpoint data"
+        },
+        {
+          "path": "src/components/react/AiMetricsDashboard.tsx",
+          "finding": "Header restructured into 3 rows: (1) metadata + refresh button, (2) View/Developer/From/To filter dropdowns, (3) status message — fixes wrapping alignment issue"
+        },
+        {
+          "path": "src/components/react/AttributionSection.tsx",
+          "finding": "FTR sparkline changed from rolling average of binary 0/100 values to cumulative rate so the last point matches the headline stat exactly"
+        },
+        {
+          "path": "scripts/types.ts",
+          "finding": "author field added to checkpoint data model"
+        }
+      ],
+      "workflow": [
+        "Playwright MCP was used to screenshot the running dashboard and verify layout fixes visually before committing",
+        "Build + test run used as a gate after each multi-file change batch"
+      ]
+    },
+    "friction": [
+      "Developer dropdown initially caused the filter row to wrap to a second line, requiring a header layout restructure",
+      "FTR sparkline showed 66.7% while headline stat showed 33.3% — rolling average vs. cumulative rate mismatch was a subtle bug that required user to flag it"
+    ],
+    "open_items": [
+      "fetch-checkpoints.ts script needs to be re-run with a GitHub token to backfill author fields in the cache for existing checkpoints",
+      "Single-developer project means the Developer filter and 'AI Usage by Developer' chart are not yet exercised with real multi-author data"
+    ]
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-20T08:38:32.761996Z",
+    "agent_lines": 189,
+    "agent_removed": 43,
+    "human_added": 315,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 510,
+    "total_lines_changed": 1460,
+    "agent_percentage": 15.890410958904111,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 111,
+      "agent_lines_removed": 5
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 397,
+      "agent_lines_removed": 34
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 3,
+      "user_lines_removed": 0,
+      "agent_lines_added": 697,
+      "agent_lines_removed": 34,
+      "user_added_per_file": {
+        ".playwright-mcp/console-2026-04-19T21-38-35-898Z.log": 3
+      }
+    }
+  ]
+}
