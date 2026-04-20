@@ -243,7 +243,7 @@ export function parseMetadata(
   raw: unknown,
   checkpointId: string,
   commitDate: string,
-): Omit<CheckpointMeta, 'bmad_commands' | 'tool_usage' | 'skill_usage' | 'subagent_count' | 'fetch_failed'> {
+): Omit<CheckpointMeta, 'bmad_commands' | 'tool_usage' | 'skill_usage' | 'subagent_count' | 'author' | 'fetch_failed'> {
   if (!isRecord(raw)) {
     return {
       checkpoint_id: checkpointId,
@@ -322,6 +322,7 @@ function parseSessionMeta(raw: unknown): {
   human_modified: number;
   human_removed: number;
   tokens: { input: number; cache_creation: number; cache_read: number; output: number };
+  summary: { friction: string[]; open_items: string[] };
 } {
   const defaults = {
     session_id: '',
@@ -334,6 +335,7 @@ function parseSessionMeta(raw: unknown): {
     human_modified: 0,
     human_removed: 0,
     tokens: { input: 0, cache_creation: 0, cache_read: 0, output: 0 },
+    summary: { friction: [] as string[], open_items: [] as string[] },
   };
 
   if (!isRecord(raw)) {
@@ -343,6 +345,7 @@ function parseSessionMeta(raw: unknown): {
   const tokenRaw = isRecord(raw['token_usage']) ? raw['token_usage'] : {};
   const attrRaw = isRecord(raw['initial_attribution']) ? raw['initial_attribution'] : {};
   const metricsRaw = isRecord(raw['session_metrics']) ? raw['session_metrics'] : {};
+  const summaryRaw = isRecord(raw['summary']) ? raw['summary'] : {};
 
   return {
     session_id: getString(raw, 'session_id') ?? '',
@@ -359,6 +362,10 @@ function parseSessionMeta(raw: unknown): {
       cache_creation: getNumber(tokenRaw, 'cache_creation_tokens'),
       cache_read: getNumber(tokenRaw, 'cache_read_tokens'),
       output: getNumber(tokenRaw, 'output_tokens'),
+    },
+    summary: {
+      friction: getArray(summaryRaw, 'friction').filter((item): item is string => typeof item === 'string'),
+      open_items: getArray(summaryRaw, 'open_items').filter((item): item is string => typeof item === 'string'),
     },
   };
 }
@@ -431,7 +438,32 @@ export async function fetchCheckpointsCache(
     }
   }
 
-  logInfo(options.logger, 'Step 2: Fetching checkpoint data...');
+  logInfo(options.logger, 'Step 2: Fetching commit authors...');
+  const authorMap = new Map<string, string>();
+  try {
+    const commitsUrl = `${BASE_URL}/repos/${REPO}/commits?sha=${BRANCH_ENCODED}&per_page=100`;
+    const commitsData = await fetchWithRetry(commitsUrl, headers);
+    if (Array.isArray(commitsData)) {
+      for (const commit of commitsData) {
+        if (!isRecord(commit)) continue;
+        const commitObj = isRecord(commit['commit']) ? commit['commit'] : null;
+        const message = commitObj ? getString(commitObj, 'message') : undefined;
+        const authorObj = commitObj && isRecord(commitObj['author']) ? commitObj['author'] : null;
+        const authorName = authorObj ? getString(authorObj, 'name') : undefined;
+        if (message && authorName) {
+          const match = /Checkpoint:\s*([0-9a-f]+)/.exec(message);
+          if (match) {
+            authorMap.set(match[1], authorName);
+          }
+        }
+      }
+    }
+    logInfo(options.logger, `  Mapped ${authorMap.size} checkpoint authors`);
+  } catch {
+    logWarn(options.logger, 'WARN: Could not fetch commit authors — author field will be empty');
+  }
+
+  logInfo(options.logger, 'Step 3: Fetching checkpoint data...');
   const checkpoints: CheckpointMeta[] = [];
 
   for (const { id, path } of metadataPaths) {
@@ -473,6 +505,14 @@ export async function fetchCheckpointsCache(
           output: accumulator.output + session.tokens.output,
         }),
         { input: 0, cache_creation: 0, cache_read: 0, output: 0 },
+      );
+
+      const summary = sessions.reduce(
+        (acc, session) => ({
+          friction: [...acc.friction, ...session.summary.friction],
+          open_items: [...acc.open_items, ...session.summary.open_items],
+        }),
+        { friction: [] as string[], open_items: [] as string[] },
       );
 
       const jsonlPaths = [...(sessionJsonlPaths.get(prefix) ?? [])].sort();
@@ -527,7 +567,7 @@ export async function fetchCheckpointsCache(
         human_modified: bestSession?.human_modified ?? 0,
         human_removed: bestSession?.human_removed ?? 0,
         tokens,
-        summary: { friction: [], open_items: [] },
+        summary,
         learnings: { repo: 0, code: 0, workflow: 0 },
         files_touched,
         turns,
@@ -535,6 +575,7 @@ export async function fetchCheckpointsCache(
         tool_usage,
         skill_usage,
         subagent_count,
+        author: authorMap.get(checkpointId) ?? 'unknown',
         fetch_failed: false,
       };
     } catch {
@@ -555,6 +596,7 @@ export async function fetchCheckpointsCache(
         tool_usage: {},
         skill_usage: {},
         subagent_count: 0,
+        author: authorMap.get(id) ?? 'unknown',
         fetch_failed: true,
       };
     }

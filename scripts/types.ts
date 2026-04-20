@@ -39,6 +39,7 @@ export interface CheckpointMeta {
   tool_usage: Record<string, number>;
   skill_usage: Record<string, number>;
   subagent_count: number;
+  author: string;
   fetch_failed: boolean;
 }
 

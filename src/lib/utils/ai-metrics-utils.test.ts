@@ -32,6 +32,7 @@ function makeCheckpoint(overrides: Partial<CheckpointMeta>): CheckpointMeta {
     tool_usage: {},
     skill_usage: {},
     subagent_count: 0,
+    author: 'Test Developer',
     fetch_failed: false,
     ...overrides,
   };

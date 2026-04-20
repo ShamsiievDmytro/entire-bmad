@@ -30,6 +30,7 @@ function normalizeCheckpoint(cp: CheckpointMeta): CheckpointMeta {
     tool_usage: cp.tool_usage ?? {},
     skill_usage: cp.skill_usage ?? {},
     subagent_count: cp.subagent_count ?? 0,
+    author: cp.author ?? 'unknown',
   };
 }
 

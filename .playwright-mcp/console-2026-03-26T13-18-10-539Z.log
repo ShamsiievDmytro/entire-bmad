@@ -1,6 +1,0 @@
-[   13016ms] Error: Canvas is already in use. Chart with ID '0' must be destroyed before the canvas with ID 'metric-3' can be reused.
-    at new Chart (http://localhost:4322/node_modules/.vite/deps/chunk-PAJUT44J.js?v=80deb9af:8588:13)
-    at renderMetric3 (http://localhost:4322/src/lib/utils/ai-dashboard-renderer.ts:104:14)
-    at renderDashboard (http://localhost:4322/src/lib/utils/ai-dashboard-renderer.ts:406:3)
-    at HTMLSelectElement.<anonymous> (http://localhost:4322/src/pages/ai-metrics.astro?astro&type=script&index=0&lang.ts:10:7)
-    at async <anonymous>:327:30

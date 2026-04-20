@@ -9,6 +9,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import TextField from '@mui/material/TextField';
 import { lightTheme } from '../../lib/mui-theme';
 import { filterRenderableCheckpoints, formatCheckpointOptionLabel, formatGeneratedAt } from '../../lib/utils/ai-metrics-utils';
 import { fetchCheckpointsCache } from '../../lib/utils/github-checkpoints';
@@ -19,6 +20,7 @@ import TokenSection from './TokenSection';
 import QualitySection from './QualitySection';
 import BehavioralSection from './BehavioralSection';
 import TemporalSection from './TemporalSection';
+import QualityDebtSection from './QualityDebtSection';
 
 interface CacheMeta {
   repo: string;
@@ -36,6 +38,9 @@ interface Props {
 export default function AiMetricsDashboard({ initialCheckpoints, meta, source }: Props) {
   const [allCheckpoints, setAllCheckpoints] = useState(initialCheckpoints);
   const [selectedValue, setSelectedValue] = useState('all');
+  const [selectedAuthor, setSelectedAuthor] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [cacheMeta, setCacheMeta] = useState(meta);
   const [refreshStatus, setRefreshStatus] = useState(
     meta === null
@@ -50,10 +55,25 @@ export default function AiMetricsDashboard({ initialCheckpoints, meta, source }:
     [allCheckpoints],
   );
 
+  const uniqueAuthors = useMemo(
+    () => [...new Set(allCheckpoints.map((c) => c.author).filter((a) => a && a !== 'unknown'))].sort(),
+    [allCheckpoints],
+  );
+
   const selectedCheckpoints = useMemo(() => {
-    if (selectedValue === 'all') return allCheckpoints;
-    return allCheckpoints.filter((c) => c.checkpoint_id === selectedValue);
-  }, [allCheckpoints, selectedValue]);
+    let filtered = allCheckpoints;
+    if (selectedValue !== 'all') filtered = filtered.filter((c) => c.checkpoint_id === selectedValue);
+    if (selectedAuthor !== 'all') filtered = filtered.filter((c) => c.author === selectedAuthor);
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime();
+      filtered = filtered.filter((c) => new Date(c.commit_date).getTime() >= from);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo).getTime() + 86_400_000; // include the whole "to" day
+      filtered = filtered.filter((c) => new Date(c.commit_date).getTime() < to);
+    }
+    return filtered;
+  }, [allCheckpoints, selectedValue, selectedAuthor, dateFrom, dateTo]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -90,19 +110,12 @@ export default function AiMetricsDashboard({ initialCheckpoints, meta, source }:
 
       {/* Header */}
       <Paper sx={{ p: 2.5, mb: 4 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', xl: 'row' },
-            gap: 2,
-            alignItems: { xl: 'flex-end' },
-            justifyContent: { xl: 'space-between' },
-          }}
-        >
+        {/* Row 1: Metadata + Refresh */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 3 }}>
             <Box>
               <Typography variant="caption" color="text.disabled">Repository</Typography>
-              <Typography variant="body2" color="primary" fontWeight={500}>
+              <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
                 {cacheMeta?.repo ?? source.repo}
               </Typography>
             </Box>
@@ -114,43 +127,81 @@ export default function AiMetricsDashboard({ initialCheckpoints, meta, source }:
             </Box>
             <Box>
               <Typography variant="caption" color="text.disabled">Commits</Typography>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {cacheMeta?.checkpointCount ?? 0}
               </Typography>
             </Box>
-            <Box sx={{ minWidth: '12rem' }}>
+            <Box>
               <Typography variant="caption" color="text.disabled">Generated</Typography>
               <Typography variant="body2" color="text.secondary">
                 {formatGeneratedAt(cacheMeta?.generatedAt)}
               </Typography>
             </Box>
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>View</InputLabel>
-              <Select
-                label="View"
-                value={selectedValue}
-                onChange={(e) => setSelectedValue(e.target.value)}
-                disabled={allCheckpoints.length === 0}
-              >
-                <MenuItem value="all">All Commits</MenuItem>
-                {sorted.map((cp) => (
-                  <MenuItem key={cp.checkpoint_id} value={cp.checkpoint_id}>
-                    {formatCheckpointOptionLabel(cp)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </Box>
-
           <Button
             variant="outlined"
             onClick={handleRefresh}
             disabled={isRefreshing}
+            sx={{ whiteSpace: 'nowrap' }}
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh From GitHub'}
           </Button>
         </Box>
 
+        {/* Row 2: Filters */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mt: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>View</InputLabel>
+            <Select
+              label="View"
+              value={selectedValue}
+              onChange={(e) => setSelectedValue(e.target.value)}
+              disabled={allCheckpoints.length === 0}
+            >
+              <MenuItem value="all">All Commits</MenuItem>
+              {sorted.map((cp) => (
+                <MenuItem key={cp.checkpoint_id} value={cp.checkpoint_id}>
+                  {formatCheckpointOptionLabel(cp)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {uniqueAuthors.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Developer</InputLabel>
+              <Select
+                label="Developer"
+                value={selectedAuthor}
+                onChange={(e) => setSelectedAuthor(e.target.value)}
+              >
+                <MenuItem value="all">All Developers</MenuItem>
+                {uniqueAuthors.map((author) => (
+                  <MenuItem key={author} value={author}>{author}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          <TextField
+            type="date"
+            label="From"
+            size="small"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ width: 160 }}
+          />
+          <TextField
+            type="date"
+            label="To"
+            size="small"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+            sx={{ width: 160 }}
+          />
+        </Box>
+
+        {/* Row 3: Status */}
         <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
           <Typography variant="caption" color={statusColor}>
             {refreshStatus}
@@ -174,6 +225,7 @@ export default function AiMetricsDashboard({ initialCheckpoints, meta, source }:
         <QualitySection checkpoints={selectedCheckpoints} />
         <BehavioralSection checkpoints={selectedCheckpoints} />
         <TemporalSection checkpoints={selectedCheckpoints} />
+        <QualityDebtSection checkpoints={selectedCheckpoints} />
       </Box>
     </ThemeProvider>
   );
